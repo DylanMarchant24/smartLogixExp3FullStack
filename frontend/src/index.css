@@ -1,0 +1,168 @@
+/* ── Variables de diseño ── */
+:root {
+  --primary:       #1e3a5f;
+  --primary-light: #2d5a9e;
+  --accent:        #0ea5e9;
+  --accent-hover:  #0284c7;
+  --success:       #10b981;
+  --warning:       #f59e0b;
+  --danger:        #ef4444;
+  --info:          #6366f1;
+
+  --bg:            #f0f4f8;
+  --surface:       #ffffff;
+  --surface2:      #f8fafc;
+  --border:        #e2e8f0;
+
+  --text-primary:  #0f172a;
+  --text-secondary:#64748b;
+  --text-muted:    #94a3b8;
+
+  --radius:        10px;
+  --radius-lg:     16px;
+  --shadow-sm:     0 1px 3px rgba(0,0,0,.08);
+  --shadow:        0 4px 16px rgba(0,0,0,.10);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,.14);
+
+  --sidebar-w:     240px;
+  --header-h:      64px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+/* Scrollbar elegante */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Tabla base */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 16px; text-align: left; }
+th { font-size: .75rem; font-weight: 600; text-transform: uppercase;
+     letter-spacing: .05em; color: var(--text-secondary);
+     border-bottom: 2px solid var(--border); }
+td { border-bottom: 1px solid var(--border); font-size: .875rem; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+
+/* Badge */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 99px;
+  font-size: .72rem; font-weight: 600; letter-spacing: .03em;
+}
+.badge-success  { background: #d1fae5; color: #065f46; }
+.badge-warning  { background: #fef3c7; color: #92400e; }
+.badge-danger   { background: #fee2e2; color: #991b1b; }
+.badge-info     { background: #e0e7ff; color: #3730a3; }
+.badge-default  { background: #f1f5f9; color: #475569; }
+.badge-primary  { background: #dbeafe; color: #1e40af; }
+
+/* Botón primario */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: var(--radius);
+  font-size: .875rem; font-weight: 500; border: none;
+  transition: background .2s, transform .1s, box-shadow .2s;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); box-shadow: var(--shadow-sm); }
+.btn-secondary { background: var(--surface); color: var(--text-primary);
+                 border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--surface2); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-sm { padding: 5px 12px; font-size: .8rem; }
+
+/* Input */
+.input {
+  width: 100%; padding: 9px 12px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: .875rem; color: var(--text-primary);
+  transition: border-color .2s, box-shadow .2s; outline: none;
+}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14,165,233,.15); }
+
+/* Card base */
+.card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+}
+.card-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.card-body { padding: 24px; }
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; backdrop-filter: blur(4px);
+  animation: fadeIn .2s ease;
+}
+.modal {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); width: 100%; max-width: 480px;
+  padding: 28px; animation: slideUp .25s ease;
+}
+.modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+/* Form group */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: .8rem; font-weight: 600;
+                    color: var(--text-secondary); margin-bottom: 6px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Animaciones */
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); }
+                     to   { opacity: 1; transform: translateY(0); } }
+@keyframes spin    { to { transform: rotate(360deg); } }
+
+/* Spinner */
+.spinner {
+  width: 32px; height: 32px; border: 3px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 48px 24px;
+  color: var(--text-muted); font-size: .9rem;
+}
+.empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+/* Toast */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  display: flex; flex-direction: column; gap: 8px; z-index: 9999;
+}
+.toast {
+  padding: 12px 18px; border-radius: var(--radius);
+  font-size: .875rem; font-weight: 500; box-shadow: var(--shadow);
+  animation: slideUp .25s ease; min-width: 260px;
+}
+.toast-success { background: #065f46; color: #fff; }
+.toast-error   { background: #991b1b; color: #fff; }
+.toast-info    { background: var(--primary); color: #fff; }
