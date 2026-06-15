@@ -188,5 +188,3 @@ bash scripts/generar-reportes-pruebas.sh
 - `documentacion/checklist-entrega.md`
 - `arquetipos-maven/README.md`
 - `repositorios.txt`
-
-> Antes de entregar, reemplazar los placeholders de `repositorios.txt` por los enlaces reales de GitHub.
