@@ -1,7 +1,7 @@
 # SmartLogix - Plataforma Inteligente de Gestión Logística
 
 **Asignatura:** Desarrollo Fullstack III - DUOC UC  
-**Evaluación:** Parcial 2 - Implementación de componentes Frontend y Backend  
+**Evaluación:** Parcial 3 - Integración de arquitectura de microservicios
 **Integrantes:** Ricardo Novoa - Cristobal Pérez - Benjamín Meneses  
 **Profesor:** Israel Alejandro Villagra Riquelme
 
@@ -23,19 +23,32 @@ El objetivo técnico es resolver problemas de sincronización de stock, procesam
 └────────────────────┬───────────────────────────────────┘
                      │ HTTP/REST
 ┌────────────────────▼───────────────────────────────────┐
-│              BFF / API Gateway (8080)                  │
-│         Backend For Frontend - Spring Boot             │
+│              API Gateway Spring Cloud (8085)           │
+│        Enrutamiento, punto de entrada y filtros        │
+└────────────────────┬───────────────────────────────────┘
+                     │ lb://bff mediante Eureka
+┌────────────────────▼───────────────────────────────────┐
+│                  BFF Spring Boot (8080)                │
+│     Agrega datos y adapta respuestas para React        │
 └──────┬──────────────────┬─────────────────┬────────────┘
        │                  │                 │
-┌──────▼──────┐   ┌───────▼──────┐  ┌──────▼──────────┐
-│ms-inventario│   │  ms-pedidos  │  │   ms-envios     │
-│   (8081)    │   │    (8082)    │  │    (8083)       │
-└──────┬──────┘   └──────┬───────┘  └──────┬──────────┘
-       │                 │                 │
-  ┌────▼────┐      ┌─────▼────┐     ┌──────▼────┐
-  │db_invent│      │db_pedidos│     │ db_envios │
-  │ (MySQL) │      │ (MySQL)  │     │  (MySQL)  │
-  └─────────┘      └──────────┘     └───────────┘
+       │ REST             │ REST            │ REST
+       ▼                  ▼                 ▼
+┌──────────────┐   ┌──────────────┐  ┌──────────────┐
+│ms-inventario │   │ ms-pedidos   │  │  ms-envios   │
+│    8081      │   │    8082      │  │    8083      │
+└──────┬───────┘   └──────┬───────┘  └──────┬───────┘
+       │                  │                 │
+       ▼                  ▼                 ▼
+┌──────────────┐   ┌──────────────┐  ┌──────────────┐
+│ db_inventario│   │ db_pedidos   │  │  db_envios   │
+│    MySQL     │   │    MySQL     │  │    MySQL     │
+└──────────────┘   └──────────────┘  └──────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│          Discovery Server Eureka (8761)                │
+│ Registra API Gateway, BFF y microservicios disponibles │
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -62,6 +75,9 @@ El objetivo técnico es resolver problemas de sincronización de stock, procesam
 - **Frontend:** React 18, React Router v6, Axios, NPM
 - **Calidad:** JUnit 5, Mockito, Testing Library, JaCoCo, coverage de React
 - **Versionamiento:** Git + Git Flow
+- **Service Discovery:** Netflix Eureka
+- **API Gateway:** Spring Cloud Gateway
+- **Monitoreo:** Spring Boot Actuator
 
 ---
 
@@ -70,6 +86,8 @@ El objetivo técnico es resolver problemas de sincronización de stock, procesam
 ```text
 Smartlogix-Fullstack-3-develop/
 ├── frontend/                       # Aplicación React NPM
+├── api-gateway/                    # API Gateway Spring Cloud
+├── discovery-server/               # Servidor Eureka para Service Discovery
 ├── bff/                            # Backend For Frontend Spring Boot
 ├── ms-inventario/                  # Microservicio de inventario
 ├── ms-pedidos/                     # Microservicio de pedidos
