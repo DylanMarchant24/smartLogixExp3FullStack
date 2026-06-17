@@ -53,12 +53,14 @@ El objetivo técnico es resolver problemas de sincronización de stock, procesam
 
 ---
 
-## 3. Patrones implementados
+## 3. Patrones y componentes arquitectónicos implementados
 
 | Patrón | Componente | Problema que resuelve |
 |---|---|---|
 | **Backend For Frontend (BFF)** | `bff` | Evita que React consuma directamente 3 microservicios y entrega respuestas optimizadas para la interfaz. |
-| **API Gateway** | `bff` | Centraliza el punto de entrada del frontend y oculta la topología interna. |
+| **API Gateway** | `api-gateway` | Centraliza el punto de entrada, enruta solicitudes hacia el BFF y microservicios, y oculta la topología interna. |
+| **Service Discovery** | `discovery-server` | Permite registrar y localizar dinámicamente el BFF, API Gateway y microservicios mediante Eureka. |
+| **Monitoreo con Actuator** | `api-gateway`, `bff`, microservicios | Expone endpoints de salud y métricas para verificar el estado de los componentes. |
 | **Repository Pattern** | `ms-inventario`, `ms-pedidos`, `ms-envios` | Separa lógica de negocio y acceso a datos con Spring Data JPA. |
 | **DTO** | Todos los servicios backend | Evita exponer entidades JPA directamente y define contratos claros. |
 | **Factory Method** | `ms-pedidos/factory/PedidoFactory.java` | Crea pedidos según estado del ciclo de vida: CREADO, VALIDADO, APROBADO. |
