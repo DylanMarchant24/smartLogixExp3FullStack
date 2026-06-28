@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken, saveSession } from './auth';
 
 /**
  * PATRÓN: Service Layer (Frontend)
@@ -8,11 +9,30 @@ import axios from 'axios';
  */
 
 const BASE = '/api/bff';
+const AUTH_BASE = '/api/auth';
+
 
 const api = axios.create({
   baseURL: BASE,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
+});
+
+const authApi = axios.create({
+  baseURL: AUTH_BASE,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 10000,
+});
+
+// Interceptor JWT: agrega Authorization: Bearer TOKEN
+api.interceptors.request.use((config) => {
+  const token = getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
 });
 
 // ── Interceptores ────────────────────────────────────────────────────────────
@@ -23,6 +43,33 @@ api.interceptors.response.use(
     return Promise.reject(new Error(msg));
   }
 );
+
+// ── Autenticación ────────────────────────────────────────────────────────────
+export const login = async (username, password) => {
+  try {
+    const response = await authApi.post('/login', { username, password });
+    const { token } = response.data;
+
+    saveSession(token, response.data.username || username);
+
+    return response.data;
+  } catch (error) {
+    if (error?.response?.status === 401) {
+      throw new Error('Usuario o contraseña incorrectos.');
+    }
+
+    if (error?.response?.data?.error) {
+      throw new Error(error.response.data.error);
+    }
+
+    throw new Error('No se pudo conectar con el servidor de autenticación.');
+  }
+};
+
+export const validarToken = () =>
+  authApi.post('/validate', null, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  }).then((r) => r.data);
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 export const getDashboard = () => api.get('/dashboard').then((r) => r.data);

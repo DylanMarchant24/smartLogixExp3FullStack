@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { clearSession, getUsername } from '../services/auth';
 import './Layout.css';
 
 const NAV = [
-  { to: '/dashboard',  icon: '📊', label: 'Dashboard'  },
-  { to: '/inventario', icon: '📦', label: 'Inventario'  },
-  { to: '/pedidos',    icon: '🛒', label: 'Pedidos'     },
-  { to: '/envios',     icon: '🚚', label: 'Envíos'      },
+  { to: '/dashboard', icon: '📊', label: 'Dashboard' },
+  { to: '/inventario', icon: '📦', label: 'Inventario' },
+  { to: '/pedidos', icon: '🛒', label: 'Pedidos' },
+  { to: '/envios', icon: '🚚', label: 'Envíos' },
 ];
 
 function Layout() {
   const [collapsed, setCollapsed] = useState(false);
+
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const username = getUsername() || 'admin';
   const pageTitle = NAV.find((n) => location.pathname.startsWith(n.to))?.label || 'SmartLogix';
+
+  function handleLogout() {
+    clearSession();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <div className={`layout ${collapsed ? 'collapsed' : ''}`}>
@@ -48,12 +58,20 @@ function Layout() {
           <div className="topbar-left">
             <h1 className="page-title">{pageTitle}</h1>
           </div>
+
           <div className="topbar-right">
             <div className="topbar-badge">
               <span className="status-dot" />
-              Sistema activo
+              Sesión JWT activa
             </div>
-            <div className="avatar">SL</div>
+
+            <button className="logout-btn" onClick={handleLogout}>
+              Cerrar sesión
+            </button>
+
+            <div className="avatar">
+              {username.substring(0, 2).toUpperCase()}
+            </div>
           </div>
         </header>
 
