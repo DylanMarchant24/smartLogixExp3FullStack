@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
 import { isAuthenticated } from '../services/auth';
 import './Login.css';
@@ -11,10 +11,12 @@ function Login() {
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (isAuthenticated()) {
     return <Navigate to="/dashboard" replace />;
   }
+const expired = new URLSearchParams(location.search).get('expired') === 'true';
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -39,7 +41,11 @@ function Login() {
           <span className="login-icon">⚡</span>
           <h1>SmartLogix</h1>
         </div>
-
+    {expired && (
+    <div className="login-alert">
+        Tu sesión expiró. Inicia sesión nuevamente.
+    </div>
+    )}
 
         {error && <div className="login-error">{error}</div>}
 

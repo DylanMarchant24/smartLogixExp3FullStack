@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getToken, saveSession } from './auth';
+import { clearSession, getToken, saveSession } from './auth';
 
 /**
  * PATRÓN: Service Layer (Frontend)
@@ -39,6 +39,16 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error?.response?.status === 401) {
+      clearSession();
+
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?expired=true';
+      }
+
+      return Promise.reject(new Error('Sesión expirada. Inicia sesión nuevamente.'));
+    }
+
     const msg = error?.response?.data?.error || error.message || 'Error de conexión';
     return Promise.reject(new Error(msg));
   }
