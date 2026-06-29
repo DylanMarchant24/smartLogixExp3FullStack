@@ -1,0 +1,429 @@
+{
+  "info": {
+    "_postman_id": "smartlogix-ep3-collection",
+    "name": "SmartLogix EP3 – API REST Completa",
+    "description": "Colección de endpoints para el sistema SmartLogix (Evaluación Parcial 3).\nCubre: API Gateway, BFF, ms-inventario, ms-pedidos, ms-envios.\nAutor: Benjamín – DSY1106 Desarrollo FullStack III",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "gateway_url",    "value": "http://localhost:8085", "type": "string" },
+    { "key": "bff_url",        "value": "http://localhost:8080", "type": "string" },
+    { "key": "inventario_url", "value": "http://localhost:8081", "type": "string" },
+    { "key": "pedidos_url",    "value": "http://localhost:8082", "type": "string" },
+    { "key": "envios_url",     "value": "http://localhost:8083", "type": "string" },
+    { "key": "eureka_url",     "value": "http://localhost:8761", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔍 Service Discovery & Monitoreo",
+      "item": [
+        {
+          "name": "Eureka – Panel de servicios registrados",
+          "request": {
+            "method": "GET",
+            "url": "{{eureka_url}}/eureka/apps",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "description": "Retorna todos los microservicios registrados en Eureka. Permite verificar que bff, ms-inventario, ms-pedidos y ms-envios están activos."
+          },
+          "response": [
+            {
+              "name": "Servicios registrados – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"applications\": {\n    \"application\": [\n      { \"name\": \"BFF\", \"instance\": [{ \"status\": \"UP\", \"port\": { \"$\": 8080 } }] },\n      { \"name\": \"MS-INVENTARIO\", \"instance\": [{ \"status\": \"UP\", \"port\": { \"$\": 8081 } }] },\n      { \"name\": \"MS-PEDIDOS\",    \"instance\": [{ \"status\": \"UP\", \"port\": { \"$\": 8082 } }] },\n      { \"name\": \"MS-ENVIOS\",     \"instance\": [{ \"status\": \"UP\", \"port\": { \"$\": 8083 } }] }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "BFF – Actuator Health",
+          "request": {
+            "method": "GET",
+            "url": "{{bff_url}}/actuator/health",
+            "description": "Verifica el estado de salud del BFF."
+          },
+          "response": [
+            {
+              "name": "BFF activo – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{ \"status\": \"UP\" }"
+            }
+          ]
+        },
+        {
+          "name": "ms-inventario – Actuator Health",
+          "request": {
+            "method": "GET",
+            "url": "{{inventario_url}}/actuator/health",
+            "description": "Verifica el estado de ms-inventario y su conexión a la base de datos."
+          }
+        },
+        {
+          "name": "ms-pedidos – Actuator Health",
+          "request": {
+            "method": "GET",
+            "url": "{{pedidos_url}}/actuator/health"
+          }
+        },
+        {
+          "name": "ms-envios – Actuator Health",
+          "request": {
+            "method": "GET",
+            "url": "{{envios_url}}/actuator/health"
+          }
+        },
+        {
+          "name": "BFF – Actuator Metrics",
+          "request": {
+            "method": "GET",
+            "url": "{{bff_url}}/actuator/metrics",
+            "description": "Lista de métricas internas disponibles del BFF: JVM, HTTP requests, memoria, etc."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌐 API Gateway (puerto 8085)",
+      "item": [
+        {
+          "name": "Gateway → BFF Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{gateway_url}}/api/bff/dashboard",
+            "description": "Petición al API Gateway que enruta hacia /api/bff/dashboard en el BFF. Demuestra el enrutamiento dinámico a través del gateway."
+          },
+          "response": [
+            {
+              "name": "Dashboard via Gateway – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"resumen\": {\n    \"totalProductos\": 5,\n    \"totalPedidos\": 10,\n    \"pedidosAprobados\": 6,\n    \"pedidosPendientes\": 4,\n    \"totalEnvios\": 8,\n    \"enviosPendientes\": 3\n  },\n  \"productos\": [],\n  \"pedidos\": [],\n  \"envios\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Gateway → ms-inventario (directo)",
+          "request": {
+            "method": "GET",
+            "url": "{{gateway_url}}/api/inventario",
+            "description": "El API Gateway enruta /api/inventario/** directamente al ms-inventario."
+          }
+        },
+        {
+          "name": "Gateway → ms-pedidos (directo)",
+          "request": {
+            "method": "GET",
+            "url": "{{gateway_url}}/api/pedidos"
+          }
+        },
+        {
+          "name": "Gateway → ms-envios (directo)",
+          "request": {
+            "method": "GET",
+            "url": "{{gateway_url}}/api/envios"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 BFF – Dashboard",
+      "item": [
+        {
+          "name": "GET /api/bff/dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{bff_url}}/api/bff/dashboard",
+            "description": "Agrega datos de inventario, pedidos y envíos en un único payload optimizado para el frontend. Aplica el patrón BFF (Backend for Frontend)."
+          },
+          "response": [
+            {
+              "name": "Dashboard completo – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"resumen\": {\n    \"totalProductos\": 5,\n    \"totalPedidos\": 10,\n    \"pedidosAprobados\": 6,\n    \"pedidosPendientes\": 4,\n    \"totalEnvios\": 8,\n    \"enviosPendientes\": 3\n  },\n  \"productos\": [\n    { \"id\": 1, \"nombre\": \"Laptop Pro 15\", \"sku\": \"SKU-001\", \"stock\": 50, \"precio\": 999990 }\n  ],\n  \"pedidos\": [\n    { \"id\": 1, \"skuProducto\": \"SKU-001\", \"cantidad\": 2, \"estado\": \"APROBADO\" }\n  ],\n  \"envios\": [\n    { \"id\": 1, \"pedidoId\": 1, \"transportista\": \"Chilexpress\", \"estado\": \"PENDIENTE\" }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🗄️ BFF → Inventario (proxy)",
+      "item": [
+        {
+          "name": "GET /api/bff/inventario – Listar productos",
+          "request": {
+            "method": "GET",
+            "url": "{{bff_url}}/api/bff/inventario",
+            "description": "Proxy BFF → ms-inventario. Retorna todos los productos del inventario."
+          },
+          "response": [
+            {
+              "name": "Lista de productos – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"nombre\": \"Laptop Pro 15\",\n    \"sku\": \"SKU-001\",\n    \"stock\": 50,\n    \"precio\": 999990.00,\n    \"descripcion\": \"Laptop de alto rendimiento\",\n    \"fechaCreacion\": \"2025-01-15T10:30:00\"\n  },\n  {\n    \"id\": 2,\n    \"nombre\": \"Monitor 4K 27\",\n    \"sku\": \"SKU-002\",\n    \"stock\": 25,\n    \"precio\": 399990.00,\n    \"descripcion\": \"Monitor UHD con panel IPS\",\n    \"fechaCreacion\": \"2025-01-16T09:15:00\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/bff/inventario – Crear producto",
+          "request": {
+            "method": "POST",
+            "url": "{{bff_url}}/api/bff/inventario",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Teclado Mecánico RGB\",\n  \"sku\": \"SKU-010\",\n  \"stock\": 30,\n  \"precio\": 89990.00,\n  \"descripcion\": \"Teclado mecánico con switches Cherry MX\"\n}"
+            },
+            "description": "Crea un nuevo producto en ms-inventario a través del BFF."
+          },
+          "response": [
+            {
+              "name": "Producto creado – 201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 10,\n  \"nombre\": \"Teclado Mecánico RGB\",\n  \"sku\": \"SKU-010\",\n  \"stock\": 30,\n  \"precio\": 89990.00,\n  \"descripcion\": \"Teclado mecánico con switches Cherry MX\"\n}"
+            },
+            {
+              "name": "SKU duplicado – 400 Bad Request",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{ \"error\": \"Ya existe un producto con SKU: SKU-010\", \"status\": 400 }"
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/bff/inventario/{id} – Actualizar producto",
+          "request": {
+            "method": "PUT",
+            "url": "{{bff_url}}/api/bff/inventario/1",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Laptop Pro 15 (actualizada)\",\n  \"stock\": 45,\n  \"precio\": 949990.00,\n  \"descripcion\": \"Laptop de alto rendimiento – modelo actualizado\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Producto actualizado – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"nombre\": \"Laptop Pro 15 (actualizada)\",\n  \"sku\": \"SKU-001\",\n  \"stock\": 45,\n  \"precio\": 949990.00\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/bff/inventario/{id} – Eliminar producto",
+          "request": {
+            "method": "DELETE",
+            "url": "{{bff_url}}/api/bff/inventario/1",
+            "description": "Elimina un producto del inventario. Retorna mensaje de confirmación."
+          },
+          "response": [
+            {
+              "name": "Producto eliminado – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{ \"message\": \"Producto eliminado correctamente\", \"id\": 1 }"
+            },
+            {
+              "name": "No encontrado – 404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{ \"error\": \"Producto no encontrado con id: 1\", \"status\": 404 }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🛒 BFF → Pedidos (proxy)",
+      "item": [
+        {
+          "name": "GET /api/bff/pedidos – Listar pedidos",
+          "request": {
+            "method": "GET",
+            "url": "{{bff_url}}/api/bff/pedidos"
+          },
+          "response": [
+            {
+              "name": "Lista de pedidos – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"skuProducto\": \"SKU-001\",\n    \"cantidad\": 2,\n    \"clienteEmail\": \"cliente@test.cl\",\n    \"estado\": \"APROBADO\",\n    \"ultimoStockConocido\": 50,\n    \"fechaCreacion\": \"2025-01-20T14:00:00\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/bff/pedidos – Crear pedido",
+          "request": {
+            "method": "POST",
+            "url": "{{bff_url}}/api/bff/pedidos",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skuProducto\": \"SKU-001\",\n  \"cantidad\": 2,\n  \"clienteEmail\": \"nuevo@cliente.cl\"\n}"
+            },
+            "description": "Crea un pedido. ms-pedidos valida el SKU contra ms-inventario y reduce el stock si hay disponibilidad. Aplica Factory Method para construir el estado inicial."
+          },
+          "response": [
+            {
+              "name": "Pedido aprobado – 201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 5,\n  \"skuProducto\": \"SKU-001\",\n  \"cantidad\": 2,\n  \"clienteEmail\": \"nuevo@cliente.cl\",\n  \"estado\": \"APROBADO\",\n  \"ultimoStockConocido\": 50,\n  \"fechaCreacion\": \"2025-01-20T15:30:00\"\n}"
+            },
+            {
+              "name": "Stock insuficiente – 400 Bad Request",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{ \"error\": \"Stock insuficiente. Stock actual: 1 | Solicitado: 2\", \"status\": 400 }"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/bff/pedidos/{id}/estado – Cambiar estado",
+          "request": {
+            "method": "PATCH",
+            "url": "{{bff_url}}/api/bff/pedidos/1/estado",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"estado\": \"DESPACHADO\" }"
+            },
+            "description": "Cambia el estado del pedido. Estados válidos: CREADO, VALIDADO, APROBADO, RECHAZADO, DESPACHADO."
+          },
+          "response": [
+            {
+              "name": "Estado actualizado – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"skuProducto\": \"SKU-001\",\n  \"cantidad\": 2,\n  \"estado\": \"DESPACHADO\",\n  \"fechaModificacion\": \"2025-01-20T16:00:00\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🚚 BFF → Envíos (proxy)",
+      "item": [
+        {
+          "name": "GET /api/bff/envios – Listar envíos",
+          "request": {
+            "method": "GET",
+            "url": "{{bff_url}}/api/bff/envios"
+          },
+          "response": [
+            {
+              "name": "Lista de envíos – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"pedidoId\": 1,\n    \"transportista\": \"Chilexpress\",\n    \"direccionDestino\": \"Av. Principal 123, Santiago\",\n    \"estado\": \"PENDIENTE\",\n    \"codigoSeguimiento\": \"SL-ABCD1234\",\n    \"fechaCreacion\": \"2025-01-20T16:30:00\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/bff/envios – Crear envío",
+          "request": {
+            "method": "POST",
+            "url": "{{bff_url}}/api/bff/envios",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": 1,\n  \"transportista\": \"Starken\",\n  \"direccionDestino\": \"Calle Los Álamos 456, Santiago\"\n}"
+            },
+            "description": "Crea un nuevo envío asociado a un pedido. El sistema genera automáticamente el código de seguimiento (SL-XXXX####)."
+          },
+          "response": [
+            {
+              "name": "Envío creado – 201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 3,\n  \"pedidoId\": 1,\n  \"transportista\": \"Starken\",\n  \"direccionDestino\": \"Calle Los Álamos 456, Santiago\",\n  \"estado\": \"PENDIENTE\",\n  \"codigoSeguimiento\": \"SL-EFGH5678\",\n  \"fechaCreacion\": \"2025-01-20T17:00:00\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/bff/envios/{id}/estado – Actualizar estado",
+          "request": {
+            "method": "PATCH",
+            "url": "{{bff_url}}/api/bff/envios/1/estado",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"estado\": \"EN_CAMINO\" }"
+            },
+            "description": "Cambia el estado del envío. Estados válidos: PENDIENTE, EN_CAMINO, ENTREGADO, DEVUELTO. Al llegar a ENTREGADO se registra automáticamente la fechaEntrega."
+          },
+          "response": [
+            {
+              "name": "Estado actualizado – 200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"estado\": \"EN_CAMINO\",\n  \"codigoSeguimiento\": \"SL-ABCD1234\",\n  \"fechaModificacion\": \"2025-01-20T18:00:00\"\n}"
+            },
+            {
+              "name": "Envío entregado – fecha registrada",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"estado\": \"ENTREGADO\",\n  \"codigoSeguimiento\": \"SL-ABCD1234\",\n  \"fechaEntrega\": \"2025-01-21T10:00:00\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "⚙️ Microservicios directos (sin BFF)",
+      "item": [
+        {
+          "name": "ms-inventario – GET /api/inventario",
+          "request": {
+            "method": "GET",
+            "url": "{{inventario_url}}/api/inventario"
+          }
+        },
+        {
+          "name": "ms-inventario – GET /api/inventario/sku/{sku}",
+          "request": {
+            "method": "GET",
+            "url": "{{inventario_url}}/api/inventario/sku/SKU-001",
+            "description": "Consulta un producto directamente por SKU. Usado internamente por ms-pedidos para validar stock."
+          }
+        },
+        {
+          "name": "ms-inventario – PATCH /api/inventario/sku/{sku}/reducir-stock",
+          "request": {
+            "method": "PATCH",
+            "url": "{{inventario_url}}/api/inventario/sku/SKU-001/reducir-stock",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"cantidad\": 2 }" },
+            "description": "Reduce el stock de un producto usando una query JPQL nativa. Usado internamente por ms-pedidos."
+          }
+        },
+        {
+          "name": "ms-pedidos – GET /api/pedidos",
+          "request": {
+            "method": "GET",
+            "url": "{{pedidos_url}}/api/pedidos"
+          }
+        },
+        {
+          "name": "ms-pedidos – GET /api/pedidos/estado/{estado}",
+          "request": {
+            "method": "GET",
+            "url": "{{pedidos_url}}/api/pedidos/estado/APROBADO",
+            "description": "Filtra pedidos por estado. Estados: CREADO, VALIDADO, APROBADO, RECHAZADO, DESPACHADO."
+          }
+        },
+        {
+          "name": "ms-envios – GET /api/envios/pedido/{pedidoId}",
+          "request": {
+            "method": "GET",
+            "url": "{{envios_url}}/api/envios/pedido/1",
+            "description": "Lista todos los envíos asociados a un pedidoId específico."
+          }
+        }
+      ]
+    }
+  ]
+}
