@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearSession, getToken, saveSession } from './auth';
 
 /**
  * PATRÓN: Service Layer (Frontend)
@@ -7,7 +8,11 @@ import axios from 'axios';
  * siempre pasa por el BFF (puerto 8080).
  */
 
-const BASE = '/api/bff';
+const API_GATEWAY_URL = 'http://127.0.0.1:8085';
+
+const BASE = `${API_GATEWAY_URL}/api/bff`;
+const AUTH_BASE = `${API_GATEWAY_URL}/api/auth`;
+
 
 const api = axios.create({
   baseURL: BASE,
@@ -15,14 +20,68 @@ const api = axios.create({
   timeout: 10000,
 });
 
+const authApi = axios.create({
+  baseURL: AUTH_BASE,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 10000,
+});
+
+// Interceptor JWT: agrega Authorization: Bearer TOKEN
+api.interceptors.request.use((config) => {
+  const token = getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 // ── Interceptores ────────────────────────────────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error?.response?.status === 401) {
+      clearSession();
+
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?expired=true';
+      }
+
+      return Promise.reject(new Error('Sesión expirada. Inicia sesión nuevamente.'));
+    }
+
     const msg = error?.response?.data?.error || error.message || 'Error de conexión';
     return Promise.reject(new Error(msg));
   }
 );
+
+// ── Autenticación ────────────────────────────────────────────────────────────
+export const login = async (username, password) => {
+  try {
+    const response = await authApi.post('/login', { username, password });
+    const { token } = response.data;
+
+    saveSession(token, response.data.username || username);
+
+    return response.data;
+  } catch (error) {
+    if (error?.response?.status === 401) {
+      throw new Error('Usuario o contraseña incorrectos.');
+    }
+
+    if (error?.response?.data?.error) {
+      throw new Error(error.response.data.error);
+    }
+
+    throw new Error('No se pudo conectar con el servidor de autenticación.');
+  }
+};
+
+export const validarToken = () =>
+  authApi.post('/validate', null, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  }).then((r) => r.data);
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 export const getDashboard = () => api.get('/dashboard').then((r) => r.data);

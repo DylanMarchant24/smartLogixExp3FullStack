@@ -1,23 +1,81 @@
+cat > .gitignore <<'EOF'
+# =========================
 # Node / React
+# =========================
 frontend/node_modules/
 frontend/build/
+frontend/dist/
+frontend/.cache/
+frontend/.parcel-cache/
+
+# Cobertura temporal frontend
 frontend/coverage/
 
-# Maven / Java
+# E2E / Cypress / Playwright
+frontend/playwright-report/
+frontend/test-results/
+frontend/cypress/videos/
+frontend/cypress/screenshots/
+
+# =========================
+# Maven / Java / Spring Boot
+# =========================
 **/target/
+*.class
+*.jar
+*.war
+*.ear
 
+# =========================
 # Logs
+# =========================
 *.log
+logs/
+**/logs/
 
-# IDE
+# =========================
+# IDE / Editores
+# =========================
 .idea/
 .vscode/
 *.iml
+*.ipr
+*.iws
 
+# =========================
 # Sistema operativo
+# =========================
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Variables locales
+# =========================
+# Variables locales / secretos
+# =========================
 .env
 *.env
+.env.*
+application-local.properties
+application-dev-local.properties
+
+# =========================
+# Archivos temporales
+# =========================
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# =========================
+# MySQL / datos locales
+# =========================
+data/
+mysql-data/
+
+# =========================
+# Evidencias que SÍ deben subirse
+# Guardar evidencias en:
+# documentacion/ep3/
+# =========================
+EOF

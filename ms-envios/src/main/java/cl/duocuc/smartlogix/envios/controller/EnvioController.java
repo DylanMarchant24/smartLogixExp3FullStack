@@ -49,11 +49,24 @@ public class EnvioController {
     }
 
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<EnvioDTO> actualizarEstado(
+    public ResponseEntity<?> actualizarEstado(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
-        EstadoEnvio estado = EstadoEnvio.valueOf(body.get("estado").toUpperCase());
-        return ResponseEntity.ok(envioService.actualizarEstado(id, estado));
+
+        String estadoRequest = body.get("estado");
+
+        if (estadoRequest == null || estadoRequest.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "El campo estado es obligatorio"));
+        }
+
+        try {
+            EstadoEnvio estado = EstadoEnvio.valueOf(estadoRequest.trim().toUpperCase());
+            return ResponseEntity.ok(envioService.actualizarEstado(id, estado));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Estado de envío inválido: " + estadoRequest));
+        }
     }
 
     @ExceptionHandler(RuntimeException.class)
