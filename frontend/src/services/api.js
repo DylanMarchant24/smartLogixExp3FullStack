@@ -8,8 +8,10 @@ import { clearSession, getToken, saveSession } from './auth';
  * siempre pasa por el BFF (puerto 8080).
  */
 
-const BASE = '/api/bff';
-const AUTH_BASE = '/api/auth';
+const API_GATEWAY_URL = 'http://127.0.0.1:8085';
+
+const BASE = `${API_GATEWAY_URL}/api/bff`;
+const AUTH_BASE = `${API_GATEWAY_URL}/api/auth`;
 
 
 const api = axios.create({
