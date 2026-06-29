@@ -13,10 +13,10 @@
     </parent>
 
     <groupId>cl.duocuc.smartlogix</groupId>
-    <artifactId>bff</artifactId>
+    <artifactId>discovery-server</artifactId>
     <version>1.0.0</version>
-    <name>bff</name>
-    <description>Backend For Frontend - SmartLogix</description>
+    <name>discovery-server</name>
+    <description>Servidor Eureka para descubrimiento de microservicios SmartLogix</description>
 
     <properties>
         <java.version>17</java.version>
@@ -37,29 +37,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -74,28 +58,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                 <configuration>
+        <mainClass>cl.duocuc.smartlogix.discovery.DiscoveryServerApplication</mainClass>
+            </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>
