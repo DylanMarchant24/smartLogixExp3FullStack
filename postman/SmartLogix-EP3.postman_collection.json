@@ -1,18 +1,12 @@
 {
   "info": {
-    "_postman_id": "smartlogix-ep3-collection",
+    "_postman_id": "ca98a020-d606-4daf-b8ac-61482adae671",
     "name": "SmartLogix EP3 – API REST Completa",
     "description": "Colección de endpoints para el sistema SmartLogix (Evaluación Parcial 3).\nCubre: API Gateway, BFF, ms-inventario, ms-pedidos, ms-envios.\nAutor: Benjamín – DSY1106 Desarrollo FullStack III",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "44362306",
+    "_collection_link": "https://go.postman.co/collection/44362306-ca98a020-d606-4daf-b8ac-61482adae671?source=collection_link"
   },
-  "variable": [
-    { "key": "gateway_url",    "value": "http://localhost:8085", "type": "string" },
-    { "key": "bff_url",        "value": "http://localhost:8080", "type": "string" },
-    { "key": "inventario_url", "value": "http://localhost:8081", "type": "string" },
-    { "key": "pedidos_url",    "value": "http://localhost:8082", "type": "string" },
-    { "key": "envios_url",     "value": "http://localhost:8083", "type": "string" },
-    { "key": "eureka_url",     "value": "http://localhost:8761", "type": "string" }
-  ],
   "item": [
     {
       "name": "🔍 Service Discovery & Monitoreo",
@@ -21,15 +15,52 @@
           "name": "Eureka – Panel de servicios registrados",
           "request": {
             "method": "GET",
-            "url": "{{eureka_url}}/eureka/apps",
-            "header": [{ "key": "Accept", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{eureka_url}}/eureka/apps",
+              "host": [
+                "{{eureka_url}}"
+              ],
+              "path": [
+                "eureka",
+                "apps"
+              ]
+            },
             "description": "Retorna todos los microservicios registrados en Eureka. Permite verificar que bff, ms-inventario, ms-pedidos y ms-envios están activos."
           },
           "response": [
             {
               "name": "Servicios registrados – 200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{eureka_url}}/eureka/apps",
+                  "host": [
+                    "{{eureka_url}}"
+                  ],
+                  "path": [
+                    "eureka",
+                    "apps"
+                  ]
+                },
+                "description": "Retorna todos los microservicios registrados en Eureka. Permite verificar que bff, ms-inventario, ms-pedidos y ms-envios están activos."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"applications\": {\n    \"application\": [\n      { \"name\": \"BFF\", \"instance\": [{ \"status\": \"UP\", \"port\": { \"$\": 8080 } }] },\n      { \"name\": \"MS-INVENTARIO\", \"instance\": [{ \"status\": \"UP\", \"port\": { \"$\": 8081 } }] },\n      { \"name\": \"MS-PEDIDOS\",    \"instance\": [{ \"status\": \"UP\", \"port\": { \"$\": 8082 } }] },\n      { \"name\": \"MS-ENVIOS\",     \"instance\": [{ \"status\": \"UP\", \"port\": { \"$\": 8083 } }] }\n    ]\n  }\n}"
             }
           ]
@@ -38,14 +69,42 @@
           "name": "BFF – Actuator Health",
           "request": {
             "method": "GET",
-            "url": "{{bff_url}}/actuator/health",
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/actuator/health",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
             "description": "Verifica el estado de salud del BFF."
           },
           "response": [
             {
               "name": "BFF activo – 200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{bff_url}}/actuator/health",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "actuator",
+                    "health"
+                  ]
+                },
+                "description": "Verifica el estado de salud del BFF."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{ \"status\": \"UP\" }"
             }
           ]
@@ -54,31 +113,75 @@
           "name": "ms-inventario – Actuator Health",
           "request": {
             "method": "GET",
-            "url": "{{inventario_url}}/actuator/health",
+            "header": [],
+            "url": {
+              "raw": "{{inventario_url}}/actuator/health",
+              "host": [
+                "{{inventario_url}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
             "description": "Verifica el estado de ms-inventario y su conexión a la base de datos."
-          }
+          },
+          "response": []
         },
         {
           "name": "ms-pedidos – Actuator Health",
           "request": {
             "method": "GET",
-            "url": "{{pedidos_url}}/actuator/health"
-          }
+            "header": [],
+            "url": {
+              "raw": "{{pedidos_url}}/actuator/health",
+              "host": [
+                "{{pedidos_url}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "ms-envios – Actuator Health",
           "request": {
             "method": "GET",
-            "url": "{{envios_url}}/actuator/health"
-          }
+            "header": [],
+            "url": {
+              "raw": "{{envios_url}}/actuator/health",
+              "host": [
+                "{{envios_url}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "BFF – Actuator Metrics",
           "request": {
             "method": "GET",
-            "url": "{{bff_url}}/actuator/metrics",
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/actuator/metrics",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "actuator",
+                "metrics"
+              ]
+            },
             "description": "Lista de métricas internas disponibles del BFF: JVM, HTTP requests, memoria, etc."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -89,14 +192,44 @@
           "name": "Gateway → BFF Dashboard",
           "request": {
             "method": "GET",
-            "url": "{{gateway_url}}/api/bff/dashboard",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/bff/dashboard",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "dashboard"
+              ]
+            },
             "description": "Petición al API Gateway que enruta hacia /api/bff/dashboard en el BFF. Demuestra el enrutamiento dinámico a través del gateway."
           },
           "response": [
             {
               "name": "Dashboard via Gateway – 200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{gateway_url}}/api/bff/dashboard",
+                  "host": [
+                    "{{gateway_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "dashboard"
+                  ]
+                },
+                "description": "Petición al API Gateway que enruta hacia /api/bff/dashboard en el BFF. Demuestra el enrutamiento dinámico a través del gateway."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"resumen\": {\n    \"totalProductos\": 5,\n    \"totalPedidos\": 10,\n    \"pedidosAprobados\": 6,\n    \"pedidosPendientes\": 4,\n    \"totalEnvios\": 8,\n    \"enviosPendientes\": 3\n  },\n  \"productos\": [],\n  \"pedidos\": [],\n  \"envios\": []\n}"
             }
           ]
@@ -105,23 +238,56 @@
           "name": "Gateway → ms-inventario (directo)",
           "request": {
             "method": "GET",
-            "url": "{{gateway_url}}/api/inventario",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/inventario",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "inventario"
+              ]
+            },
             "description": "El API Gateway enruta /api/inventario/** directamente al ms-inventario."
-          }
+          },
+          "response": []
         },
         {
           "name": "Gateway → ms-pedidos (directo)",
           "request": {
             "method": "GET",
-            "url": "{{gateway_url}}/api/pedidos"
-          }
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/pedidos",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Gateway → ms-envios (directo)",
           "request": {
             "method": "GET",
-            "url": "{{gateway_url}}/api/envios"
-          }
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/envios",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "envios"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -131,15 +297,51 @@
         {
           "name": "GET /api/bff/dashboard",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "url": "{{bff_url}}/api/bff/dashboard",
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/api/bff/dashboard",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "dashboard"
+              ]
+            },
             "description": "Agrega datos de inventario, pedidos y envíos en un único payload optimizado para el frontend. Aplica el patrón BFF (Backend for Frontend)."
           },
           "response": [
             {
               "name": "Dashboard completo – 200 OK",
+              "originalRequest": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/dashboard",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "dashboard"
+                  ]
+                },
+                "description": "Agrega datos de inventario, pedidos y envíos en un único payload optimizado para el frontend. Aplica el patrón BFF (Backend for Frontend)."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"resumen\": {\n    \"totalProductos\": 5,\n    \"totalPedidos\": 10,\n    \"pedidosAprobados\": 6,\n    \"pedidosPendientes\": 4,\n    \"totalEnvios\": 8,\n    \"enviosPendientes\": 3\n  },\n  \"productos\": [\n    { \"id\": 1, \"nombre\": \"Laptop Pro 15\", \"sku\": \"SKU-001\", \"stock\": 50, \"precio\": 999990 }\n  ],\n  \"pedidos\": [\n    { \"id\": 1, \"skuProducto\": \"SKU-001\", \"cantidad\": 2, \"estado\": \"APROBADO\" }\n  ],\n  \"envios\": [\n    { \"id\": 1, \"pedidoId\": 1, \"transportista\": \"Chilexpress\", \"estado\": \"PENDIENTE\" }\n  ]\n}"
             }
           ]
@@ -153,14 +355,44 @@
           "name": "GET /api/bff/inventario – Listar productos",
           "request": {
             "method": "GET",
-            "url": "{{bff_url}}/api/bff/inventario",
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/api/bff/inventario",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "inventario"
+              ]
+            },
             "description": "Proxy BFF → ms-inventario. Retorna todos los productos del inventario."
           },
           "response": [
             {
               "name": "Lista de productos – 200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/inventario",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "inventario"
+                  ]
+                },
+                "description": "Proxy BFF → ms-inventario. Retorna todos los productos del inventario."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "[\n  {\n    \"id\": 1,\n    \"nombre\": \"Laptop Pro 15\",\n    \"sku\": \"SKU-001\",\n    \"stock\": 50,\n    \"precio\": 999990.00,\n    \"descripcion\": \"Laptop de alto rendimiento\",\n    \"fechaCreacion\": \"2025-01-15T10:30:00\"\n  },\n  {\n    \"id\": 2,\n    \"nombre\": \"Monitor 4K 27\",\n    \"sku\": \"SKU-002\",\n    \"stock\": 25,\n    \"precio\": 399990.00,\n    \"descripcion\": \"Monitor UHD con panel IPS\",\n    \"fechaCreacion\": \"2025-01-16T09:15:00\"\n  }\n]"
             }
           ]
@@ -168,26 +400,127 @@
         {
           "name": "POST /api/bff/inventario – Crear producto",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
-            "url": "{{bff_url}}/api/bff/inventario",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Teclado Mecánico RGB\",\n  \"sku\": \"SKU-010\",\n  \"stock\": 30,\n  \"precio\": 89990.00,\n  \"descripcion\": \"Teclado mecánico con switches Cherry MX\"\n}"
+              "raw": "{\n  \"sku\": \"SKU-010\",\n  \"nombre\": \"Producto duplicado\",\n  \"descripcion\": \"Prueba de validación\",\n  \"stock\": 10,\n  \"precio\": 9990\n}"
+            },
+            "url": {
+              "raw": "{{bff_url}}/api/bff/inventario",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "inventario"
+              ]
             },
             "description": "Crea un nuevo producto en ms-inventario a través del BFF."
           },
           "response": [
             {
               "name": "Producto creado – 201 Created",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sku\": \"SKU-010\",\n  \"nombre\": \"Producto duplicado\",\n  \"descripcion\": \"Prueba de validación\",\n  \"stock\": 10,\n  \"precio\": 9990\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/inventario",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "inventario"
+                  ]
+                },
+                "description": "Crea un nuevo producto en ms-inventario a través del BFF."
+              },
               "status": "Created",
               "code": 201,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"id\": 10,\n  \"nombre\": \"Teclado Mecánico RGB\",\n  \"sku\": \"SKU-010\",\n  \"stock\": 30,\n  \"precio\": 89990.00,\n  \"descripcion\": \"Teclado mecánico con switches Cherry MX\"\n}"
             },
             {
               "name": "SKU duplicado – 400 Bad Request",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sku\": \"SKU-010\",\n  \"nombre\": \"Producto duplicado\",\n  \"descripcion\": \"Prueba de validación\",\n  \"stock\": 10,\n  \"precio\": 9990\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/inventario",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "inventario"
+                  ]
+                },
+                "description": "Crea un nuevo producto en ms-inventario a través del BFF."
+              },
               "status": "Bad Request",
               "code": 400,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{ \"error\": \"Ya existe un producto con SKU: SKU-010\", \"status\": 400 }"
             }
           ]
@@ -195,19 +528,83 @@
         {
           "name": "PUT /api/bff/inventario/{id} – Actualizar producto",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
-            "url": "{{bff_url}}/api/bff/inventario/1",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Laptop Pro 15 (actualizada)\",\n  \"stock\": 45,\n  \"precio\": 949990.00,\n  \"descripcion\": \"Laptop de alto rendimiento – modelo actualizado\"\n}"
+              "raw": "{\n  \"nombre\": \"Producto actualizado\",\n  \"sku\": \"SKU-TEST-JWT\",\n  \"stock\": 15,\n  \"precio\": 10990,\n  \"descripcion\": \"Producto actualizado desde Postman con JWT\"\n}"
+            },
+            "url": {
+              "raw": "{{bff_url}}/api/bff/inventario/3",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "inventario",
+                "3"
+              ]
             }
           },
           "response": [
             {
               "name": "Producto actualizado – 200 OK",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Producto actualizado\",\n  \"sku\": \"SKU-TEST-JWT\",\n  \"stock\": 15,\n  \"precio\": 10990,\n  \"descripcion\": \"Producto actualizado desde Postman con JWT\"\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/inventario/3",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "inventario",
+                    "3"
+                  ]
+                }
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"id\": 1,\n  \"nombre\": \"Laptop Pro 15 (actualizada)\",\n  \"sku\": \"SKU-001\",\n  \"stock\": 45,\n  \"precio\": 949990.00\n}"
             }
           ]
@@ -215,21 +612,103 @@
         {
           "name": "DELETE /api/bff/inventario/{id} – Eliminar producto",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
-            "url": "{{bff_url}}/api/bff/inventario/1",
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/api/bff/inventario/3",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "inventario",
+                "3"
+              ]
+            },
             "description": "Elimina un producto del inventario. Retorna mensaje de confirmación."
           },
           "response": [
             {
               "name": "Producto eliminado – 200 OK",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/inventario/3",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "inventario",
+                    "3"
+                  ]
+                },
+                "description": "Elimina un producto del inventario. Retorna mensaje de confirmación."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{ \"message\": \"Producto eliminado correctamente\", \"id\": 1 }"
             },
             {
               "name": "No encontrado – 404 Not Found",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/inventario/3",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "inventario",
+                    "3"
+                  ]
+                },
+                "description": "Elimina un producto del inventario. Retorna mensaje de confirmación."
+              },
               "status": "Not Found",
               "code": 404,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{ \"error\": \"Producto no encontrado con id: 1\", \"status\": 404 }"
             }
           ]
@@ -243,13 +722,42 @@
           "name": "GET /api/bff/pedidos – Listar pedidos",
           "request": {
             "method": "GET",
-            "url": "{{bff_url}}/api/bff/pedidos"
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/api/bff/pedidos",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "pedidos"
+              ]
+            }
           },
           "response": [
             {
               "name": "Lista de pedidos – 200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/pedidos",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "pedidos"
+                  ]
+                }
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "[\n  {\n    \"id\": 1,\n    \"skuProducto\": \"SKU-001\",\n    \"cantidad\": 2,\n    \"clienteEmail\": \"cliente@test.cl\",\n    \"estado\": \"APROBADO\",\n    \"ultimoStockConocido\": 50,\n    \"fechaCreacion\": \"2025-01-20T14:00:00\"\n  }\n]"
             }
           ]
@@ -257,26 +765,127 @@
         {
           "name": "POST /api/bff/pedidos – Crear pedido",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
-            "url": "{{bff_url}}/api/bff/pedidos",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"skuProducto\": \"SKU-001\",\n  \"cantidad\": 2,\n  \"clienteEmail\": \"nuevo@cliente.cl\"\n}"
+            },
+            "url": {
+              "raw": "{{bff_url}}/api/bff/pedidos",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "pedidos"
+              ]
             },
             "description": "Crea un pedido. ms-pedidos valida el SKU contra ms-inventario y reduce el stock si hay disponibilidad. Aplica Factory Method para construir el estado inicial."
           },
           "response": [
             {
               "name": "Pedido aprobado – 201 Created",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"skuProducto\": \"SKU-001\",\n  \"cantidad\": 2,\n  \"clienteEmail\": \"nuevo@cliente.cl\"\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/pedidos",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "pedidos"
+                  ]
+                },
+                "description": "Crea un pedido. ms-pedidos valida el SKU contra ms-inventario y reduce el stock si hay disponibilidad. Aplica Factory Method para construir el estado inicial."
+              },
               "status": "Created",
               "code": 201,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"id\": 5,\n  \"skuProducto\": \"SKU-001\",\n  \"cantidad\": 2,\n  \"clienteEmail\": \"nuevo@cliente.cl\",\n  \"estado\": \"APROBADO\",\n  \"ultimoStockConocido\": 50,\n  \"fechaCreacion\": \"2025-01-20T15:30:00\"\n}"
             },
             {
               "name": "Stock insuficiente – 400 Bad Request",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"skuProducto\": \"SKU-001\",\n  \"cantidad\": 2,\n  \"clienteEmail\": \"nuevo@cliente.cl\"\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/pedidos",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "pedidos"
+                  ]
+                },
+                "description": "Crea un pedido. ms-pedidos valida el SKU contra ms-inventario y reduce el stock si hay disponibilidad. Aplica Factory Method para construir el estado inicial."
+              },
               "status": "Bad Request",
               "code": 400,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{ \"error\": \"Stock insuficiente. Stock actual: 1 | Solicitado: 2\", \"status\": 400 }"
             }
           ]
@@ -284,20 +893,87 @@
         {
           "name": "PATCH /api/bff/pedidos/{id}/estado – Cambiar estado",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PATCH",
-            "url": "{{bff_url}}/api/bff/pedidos/1/estado",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{ \"estado\": \"DESPACHADO\" }"
+              "raw": "{\r\n  \"estado\": \"APROBADO\"\r\n}"
+            },
+            "url": {
+              "raw": "{{bff_url}}/api/bff/pedidos/1/estado",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "pedidos",
+                "1",
+                "estado"
+              ]
             },
             "description": "Cambia el estado del pedido. Estados válidos: CREADO, VALIDADO, APROBADO, RECHAZADO, DESPACHADO."
           },
           "response": [
             {
               "name": "Estado actualizado – 200 OK",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"estado\": \"APROBADO\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/pedidos/1/estado",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "pedidos",
+                    "1",
+                    "estado"
+                  ]
+                },
+                "description": "Cambia el estado del pedido. Estados válidos: CREADO, VALIDADO, APROBADO, RECHAZADO, DESPACHADO."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"id\": 1,\n  \"skuProducto\": \"SKU-001\",\n  \"cantidad\": 2,\n  \"estado\": \"DESPACHADO\",\n  \"fechaModificacion\": \"2025-01-20T16:00:00\"\n}"
             }
           ]
@@ -311,13 +987,42 @@
           "name": "GET /api/bff/envios – Listar envíos",
           "request": {
             "method": "GET",
-            "url": "{{bff_url}}/api/bff/envios"
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/api/bff/envios",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "envios"
+              ]
+            }
           },
           "response": [
             {
               "name": "Lista de envíos – 200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/envios",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "envios"
+                  ]
+                }
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "[\n  {\n    \"id\": 1,\n    \"pedidoId\": 1,\n    \"transportista\": \"Chilexpress\",\n    \"direccionDestino\": \"Av. Principal 123, Santiago\",\n    \"estado\": \"PENDIENTE\",\n    \"codigoSeguimiento\": \"SL-ABCD1234\",\n    \"fechaCreacion\": \"2025-01-20T16:30:00\"\n  }\n]"
             }
           ]
@@ -325,20 +1030,83 @@
         {
           "name": "POST /api/bff/envios – Crear envío",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
-            "url": "{{bff_url}}/api/bff/envios",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"pedidoId\": 1,\n  \"transportista\": \"Starken\",\n  \"direccionDestino\": \"Calle Los Álamos 456, Santiago\"\n}"
+            },
+            "url": {
+              "raw": "{{bff_url}}/api/bff/envios",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "envios"
+              ]
             },
             "description": "Crea un nuevo envío asociado a un pedido. El sistema genera automáticamente el código de seguimiento (SL-XXXX####)."
           },
           "response": [
             {
               "name": "Envío creado – 201 Created",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"pedidoId\": 1,\n  \"transportista\": \"Starken\",\n  \"direccionDestino\": \"Calle Los Álamos 456, Santiago\"\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/envios",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "envios"
+                  ]
+                },
+                "description": "Crea un nuevo envío asociado a un pedido. El sistema genera automáticamente el código de seguimiento (SL-XXXX####)."
+              },
               "status": "Created",
               "code": 201,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"id\": 3,\n  \"pedidoId\": 1,\n  \"transportista\": \"Starken\",\n  \"direccionDestino\": \"Calle Los Álamos 456, Santiago\",\n  \"estado\": \"PENDIENTE\",\n  \"codigoSeguimiento\": \"SL-EFGH5678\",\n  \"fechaCreacion\": \"2025-01-20T17:00:00\"\n}"
             }
           ]
@@ -346,26 +1114,133 @@
         {
           "name": "PATCH /api/bff/envios/{id}/estado – Actualizar estado",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PATCH",
-            "url": "{{bff_url}}/api/bff/envios/1/estado",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{ \"estado\": \"EN_CAMINO\" }"
+              "raw": "{\r\n  \"estado\": \"EN_CAMINO\"\r\n}"
+            },
+            "url": {
+              "raw": "{{bff_url}}/api/bff/envios/1/estado",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "bff",
+                "envios",
+                "1",
+                "estado"
+              ]
             },
             "description": "Cambia el estado del envío. Estados válidos: PENDIENTE, EN_CAMINO, ENTREGADO, DEVUELTO. Al llegar a ENTREGADO se registra automáticamente la fechaEntrega."
           },
           "response": [
             {
               "name": "Estado actualizado – 200 OK",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"estado\": \"EN_CAMINO\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/envios/1/estado",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "envios",
+                    "1",
+                    "estado"
+                  ]
+                },
+                "description": "Cambia el estado del envío. Estados válidos: PENDIENTE, EN_CAMINO, ENTREGADO, DEVUELTO. Al llegar a ENTREGADO se registra automáticamente la fechaEntrega."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"id\": 1,\n  \"estado\": \"EN_CAMINO\",\n  \"codigoSeguimiento\": \"SL-ABCD1234\",\n  \"fechaModificacion\": \"2025-01-20T18:00:00\"\n}"
             },
             {
               "name": "Envío entregado – fecha registrada",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"estado\": \"EN_CAMINO\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{bff_url}}/api/bff/envios/1/estado",
+                  "host": [
+                    "{{bff_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bff",
+                    "envios",
+                    "1",
+                    "estado"
+                  ]
+                },
+                "description": "Cambia el estado del envío. Estados válidos: PENDIENTE, EN_CAMINO, ENTREGADO, DEVUELTO. Al llegar a ENTREGADO se registra automáticamente la fechaEntrega."
+              },
               "status": "OK",
               "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [],
+              "cookie": [],
               "body": "{\n  \"id\": 1,\n  \"estado\": \"ENTREGADO\",\n  \"codigoSeguimiento\": \"SL-ABCD1234\",\n  \"fechaEntrega\": \"2025-01-21T10:00:00\"\n}"
             }
           ]
@@ -379,51 +1254,272 @@
           "name": "ms-inventario – GET /api/inventario",
           "request": {
             "method": "GET",
-            "url": "{{inventario_url}}/api/inventario"
-          }
+            "header": [],
+            "url": {
+              "raw": "{{inventario_url}}/api/inventario",
+              "host": [
+                "{{inventario_url}}"
+              ],
+              "path": [
+                "api",
+                "inventario"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "ms-inventario – GET /api/inventario/sku/{sku}",
           "request": {
             "method": "GET",
-            "url": "{{inventario_url}}/api/inventario/sku/SKU-001",
+            "header": [],
+            "url": {
+              "raw": "{{inventario_url}}/api/inventario/sku/SKU-001",
+              "host": [
+                "{{inventario_url}}"
+              ],
+              "path": [
+                "api",
+                "inventario",
+                "sku",
+                "SKU-001"
+              ]
+            },
             "description": "Consulta un producto directamente por SKU. Usado internamente por ms-pedidos para validar stock."
-          }
+          },
+          "response": []
         },
         {
           "name": "ms-inventario – PATCH /api/inventario/sku/{sku}/reducir-stock",
           "request": {
             "method": "PATCH",
-            "url": "{{inventario_url}}/api/inventario/sku/SKU-001/reducir-stock",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{ \"cantidad\": 2 }" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"cantidad\": 2 }"
+            },
+            "url": {
+              "raw": "{{inventario_url}}/api/inventario/sku/SKU-001/reducir-stock",
+              "host": [
+                "{{inventario_url}}"
+              ],
+              "path": [
+                "api",
+                "inventario",
+                "sku",
+                "SKU-001",
+                "reducir-stock"
+              ]
+            },
             "description": "Reduce el stock de un producto usando una query JPQL nativa. Usado internamente por ms-pedidos."
-          }
+          },
+          "response": []
         },
         {
           "name": "ms-pedidos – GET /api/pedidos",
           "request": {
             "method": "GET",
-            "url": "{{pedidos_url}}/api/pedidos"
-          }
+            "header": [],
+            "url": {
+              "raw": "{{pedidos_url}}/api/pedidos",
+              "host": [
+                "{{pedidos_url}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "ms-pedidos – GET /api/pedidos/estado/{estado}",
           "request": {
             "method": "GET",
-            "url": "{{pedidos_url}}/api/pedidos/estado/APROBADO",
+            "header": [],
+            "url": {
+              "raw": "{{pedidos_url}}/api/pedidos/estado/APROBADO",
+              "host": [
+                "{{pedidos_url}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "estado",
+                "APROBADO"
+              ]
+            },
             "description": "Filtra pedidos por estado. Estados: CREADO, VALIDADO, APROBADO, RECHAZADO, DESPACHADO."
-          }
+          },
+          "response": []
         },
         {
           "name": "ms-envios – GET /api/envios/pedido/{pedidoId}",
           "request": {
             "method": "GET",
-            "url": "{{envios_url}}/api/envios/pedido/1",
+            "header": [],
+            "url": {
+              "raw": "{{envios_url}}/api/envios/pedido/1",
+              "host": [
+                "{{envios_url}}"
+              ],
+              "path": [
+                "api",
+                "envios",
+                "pedido",
+                "1"
+              ]
+            },
             "description": "Lista todos los envíos asociados a un pedidoId específico."
-          }
+          },
+          "response": []
         }
       ]
+    },
+    {
+      "name": "Autenticación JWT",
+      "item": [
+        {
+          "name": "POST Login JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login exitoso\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Token JWT recibido\", function () {\r",
+                  "    pm.expect(response.token).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"jwt_token\", response.token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"admin\",\r\n  \"password\": \"admin123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{bff_url}}/api/auth/login",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Validate JWT",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/api/auth/validate",
+              "host": [
+                "{{bff_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "validate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8085"
+    },
+    {
+      "key": "bff_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "inventario_url",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "pedidos_url",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "envios_url",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "eureka_url",
+      "value": "http://localhost:8761"
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
     }
   ]
 }
