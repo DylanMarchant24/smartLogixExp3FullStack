@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.Collections;
 import java.util.List;
@@ -147,10 +150,21 @@ public class BffService {
     @SuppressWarnings("unchecked")
     private Map<String, Object> proxyMap(HttpMethod method, String url, Map<String, Object> body, String errorMessage) {
         try {
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
             ResponseEntity<Map> response = restTemplate.exchange(url, method, entity, Map.class);
+
             Map<String, Object> responseBody = response.getBody();
             return responseBody != null ? responseBody : Collections.emptyMap();
+
+        } catch (RestClientResponseException e) {
+            throw new RuntimeException(
+                    errorMessage + " | Status: " + e.getStatusCode().value() +
+                    " | Respuesta: " + e.getResponseBodyAsString()
+            );
         } catch (RestClientException e) {
             throw new RuntimeException(errorMessage + ": " + e.getMessage());
         }

@@ -52,14 +52,14 @@ public class SecurityConfig {
 
                         // Rutas criticas protegidas por JWT
                         .requestMatchers(HttpMethod.POST, "/api/bff/inventario").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/bff/inventario/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/bff/inventario/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/bff/inventario/*").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/bff/inventario/*").authenticated()
 
                         .requestMatchers(HttpMethod.POST, "/api/bff/pedidos").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/api/bff/pedidos/**/estado").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/bff/pedidos/*/estado").authenticated()
 
                         .requestMatchers(HttpMethod.POST, "/api/bff/envios").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/api/bff/envios/**/estado").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/bff/envios/*/estado").authenticated()
 
                         // Consultas publicas para dashboard y listados
                         .anyRequest().permitAll()

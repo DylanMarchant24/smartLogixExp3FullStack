@@ -44,11 +44,24 @@ public class PedidoController {
     }
 
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<PedidoDTO> cambiarEstado(
+    public ResponseEntity<?> cambiarEstado(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
-        EstadoPedido estado = EstadoPedido.valueOf(body.get("estado").toUpperCase());
-        return ResponseEntity.ok(pedidoService.cambiarEstado(id, estado));
+
+        String estadoRequest = body.get("estado");
+
+        if (estadoRequest == null || estadoRequest.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "El campo estado es obligatorio"));
+        }
+
+        try {
+            EstadoPedido estado = EstadoPedido.valueOf(estadoRequest.trim().toUpperCase());
+            return ResponseEntity.ok(pedidoService.cambiarEstado(id, estado));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Estado de pedido inválido: " + estadoRequest));
+        }
     }
 
     @ExceptionHandler(RuntimeException.class)
