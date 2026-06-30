@@ -4,6 +4,9 @@
 **Integrante:** Benjamín  
 **Módulo:** Pruebas, cobertura y documentación de entrega  
 
+
+**Responsable principal:** Benjamin - rama `feature/benjamin-tests-docs`
+
 ---
 
 ## 1. Resumen ejecutivo

@@ -1,6 +1,6 @@
 # Guía de Ejecución de Pruebas – SmartLogix EP3
 
-**Autor:** Benjamín  
+**Autor:** Benjamin - rama `feature/benjamin-tests-docs`  
 
 ---
 
@@ -67,19 +67,19 @@ npm test
 
 ---
 
-## 3. Script unificado
+## 3. Scripts de ejecucion
 
-Para ejecutar todo de una vez desde la raíz del proyecto:
+En Windows, desde la raiz del proyecto:
 
-```bash
-bash scripts/run-backend-tests.bat
-bash scripts/run-frontend-tests.bat
-```
-
-O en Windows (doble clic o desde cmd):
-```
+```cmd
 scripts\run-backend-tests.bat
 scripts\run-frontend-tests.bat
+```
+
+En Git Bash, Linux o macOS, desde la raiz del proyecto:
+
+```bash
+bash scripts/generar-reportes-pruebas.sh
 ```
 
 ---

@@ -1,4 +1,6 @@
-# Resultados de Pruebas Unitarias y Cobertura - SmartLogix
+# Resultados de Pruebas Unitarias y Cobertura - SmartLogix EP3
+
+**Responsable principal:** Benjamin - rama `feature/benjamin-tests-docs`
 
 ## 1. Objetivo
 

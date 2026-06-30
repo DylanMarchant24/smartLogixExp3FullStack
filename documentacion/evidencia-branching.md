@@ -1,90 +1,119 @@
-# Evidencia de Branching - SmartLogix
+# Evidencia de Branching - SmartLogix EP3
 
-## 1. Estrategia usada
+## 1. Evidencia base
 
-Se usa Git Flow con ramas principales `main` y `develop`, mas ramas de trabajo por funcionalidad:
-
-- `feature/ms-inventario`
-- `feature/ms-pedidos`
-- `feature/ms-envios`
-- `feature/bff`
-- `feature/frontend-dashboard`
-- `release/v1.0.0`
-
-## 2. Flujo de colaboracion
-
-1. Cada integrante crea su rama desde `develop`.
-2. Cada funcionalidad se desarrolla con commits pequenos y descriptivos.
-3. Cada rama se sube a GitHub.
-4. Se crea Pull Request hacia `develop`.
-5. Otro integrante revisa el codigo.
-6. Se ejecutan pruebas antes de hacer merge.
-7. El merge se realiza con `--no-ff` para dejar evidencia historica.
-
-## 3. Ejemplo de historial esperado
+En GitHub se observa que el repositorio trabaja con las siguientes ramas:
 
 ```text
-*   a1b2c3d (main, tag: v1.0.0) Merge release/v1.0.0
-|\
-| * d4e5f6g fix(release): corrige configuracion CORS en BFF
-| *   h7i8j9k Merge feature/frontend-dashboard into develop
-| |\
-| | * 11a22bb feat(frontend): agrega dashboard e integracion con BFF
-| | * 22b33cc test(frontend): agrega pruebas de useDashboard y StatCard
-| *   l0m1n2o Merge feature/bff into develop
-| |\
-| | * 33c44dd feat(bff): agrega proxies CRUD de inventario
-| | * 44d55ee test(bff): agrega pruebas unitarias de BffService
-| *   p3q4r5s Merge feature/ms-envios into develop
-| *   t6u7v8w Merge feature/ms-pedidos into develop
-| *   x9y0z1a Merge feature/ms-inventario into develop
-|/
-* b2c3d4e chore: inicializa estructura SmartLogix
+main
+develop
+feature/benjamin-tests-docs
+feature/cristobal-jwt-auth
+feature/ricardo-discovery-gateway
 ```
 
-## 4. Ejemplo de conflicto documentado
+Esta evidencia reemplaza la version anterior del documento, que contenia nombres de ramas genericos que no coincidian con el repositorio real.
 
-Archivo con conflicto: `README.md`.
+## 2. Relacion entre ramas y colaboradores
 
-Motivo: dos ramas actualizaron la tabla de endpoints del BFF al mismo tiempo.
+| Colaborador | Rama de trabajo | Aporte documentado |
+|---|---|---|
+| Ricardo Novoa | `feature/ricardo-discovery-gateway` | Service Discovery con Eureka, API Gateway, rutas, configuracion de monitoreo con Actuator y documentacion tecnica asociada. |
+| Cristobal Perez | `feature/cristobal-jwt-auth` | Autenticacion JWT en el BFF, login, validacion de token, filtro de seguridad, proteccion de operaciones criticas y ajustes de frontend para autenticacion. |
+| Benjamin Meneses | `feature/benjamin-tests-docs` | Pruebas unitarias de backend y frontend, guias de ejecucion, informe de pruebas y documentacion de cobertura. |
 
-Marcas de conflicto:
+## 3. Capturas que deben ir en esta seccion
+
+### Evidencia 1 - Lista de ramas
+
+Aqui va la captura de GitHub donde se ven las ramas:
 
 ```text
-<<<<<<< HEAD
-| POST | /api/bff/pedidos | Crea pedido |
-=======
-| POST | /api/bff/envios | Crea envio |
->>>>>>> feature/ms-envios
+main
+develop
+feature/benjamin-tests-docs
+feature/cristobal-jwt-auth
+feature/ricardo-discovery-gateway
 ```
 
-Resolucion aplicada:
+Esta captura demuestra que el equipo utilizo ramas separadas por responsabilidad y que no se trabajo todo directamente sobre `main`.
+
+### Evidencia 2 - Commits por rama
+
+Aqui va una captura de los commits de cada rama, idealmente desde:
 
 ```text
-| POST | /api/bff/pedidos | Crea pedido |
-| POST | /api/bff/envios | Crea envio |
+GitHub > Code > selector de rama > Commits
 ```
 
-Comandos usados:
+Se debe mostrar el autor, la fecha y el mensaje del commit.
+
+### Evidencia 3 - Pull Requests o merges
+
+Aqui va la captura de los Pull Requests cerrados o merges realizados hacia `develop`.
+
+Si el equipo no uso Pull Requests y realizo merges locales, se debe mostrar una captura del historial de commits o del grafico de ramas.
+
+### Evidencia 4 - Integracion final
+
+Aqui va una captura donde se vea que `develop` o `main` contiene el proyecto integrado con:
+
+- `discovery-server/`
+- `api-gateway/`
+- `bff/`
+- `ms-inventario/`
+- `ms-pedidos/`
+- `ms-envios/`
+- `frontend/`
+- `documentacion/`
+
+## 4. Historial esperado segun el flujo real
+
+El historial del repositorio deberia reflejar una estructura parecida a esta:
+
+```text
+main
+└── develop
+    ├── feature/ricardo-discovery-gateway
+    ├── feature/cristobal-jwt-auth
+    └── feature/benjamin-tests-docs
+```
+
+No se incluye una rama `release/*` porque no aparece en la evidencia actual del repositorio. Si posteriormente se crea una rama de release, se puede agregar al plan de branching, pero no corresponde documentarla como evidencia si no existe.
+
+## 5. Buenas practicas aplicadas
+
+- Separacion del trabajo por ramas `feature/*`.
+- Uso de `develop` como rama de integracion.
+- `main` reservada como rama estable.
+- Ramas con nombres descriptivos y asociadas a responsabilidades reales.
+- Documentacion de cambios por colaborador.
+- Evidencia visual de ramas y commits desde GitHub.
+
+## 6. Conflictos
+
+No se debe inventar un conflicto si no ocurrio realmente. Para cumplir con buenas practicas, se documenta el procedimiento de resolucion:
 
 ```bash
-git checkout feature/frontend-dashboard
-git fetch origin
-git rebase origin/develop
-# resolver README.md
-git add README.md
-git rebase --continue
-git push origin feature/frontend-dashboard --force-with-lease
+git checkout develop
+git pull origin develop
+
+git checkout feature/nombre-rama
+git merge develop
+
+# Resolver archivos con conflicto
+git add archivo-resuelto
+git commit -m "fix(branching): resuelve conflicto con develop"
+git push origin feature/nombre-rama
 ```
 
-## 5. Evidencias que se deben adjuntar en GitHub o presentacion
+Si existio un conflicto real, aqui debe agregarse:
 
-- Captura de ramas `main`, `develop`, `feature/*` y `release/*`.
-- Pull Requests cerrados hacia `develop`.
-- Captura de checks o salida de pruebas.
-- Captura de un conflicto resuelto o descripcion del conflicto.
-- Salida de `git log --graph --oneline --all --decorate`.
+- Archivo afectado.
+- Ramas involucradas.
+- Captura del conflicto o del commit de resolucion.
+- Explicacion breve de como se resolvio.
 
-## 6. Aporte al equipo
+## 7. Conclusion
 
-Esta estrategia favorece colaboracion porque cada integrante trabaja aislado en una feature, reduce riesgo de romper `develop`, deja trazabilidad con Pull Requests y permite preparar versiones con `release/*`.
+La estrategia de branching utilizada permite demostrar colaboracion real dentro del proyecto SmartLogix. Cada integrante trabajo en una rama diferenciada, lo que facilita la trazabilidad de aportes, reduce errores por cambios simultaneos y permite integrar el sistema de forma ordenada hacia `develop` y `main`.
