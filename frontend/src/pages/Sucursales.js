@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-
+import { useSearchParams } from 'react-router-dom';
 import {
   getSucursales,
   crearSucursal,
@@ -22,13 +22,16 @@ const TIPOS = [
 
 
 function Sucursales() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const estadoUrl = searchParams.get('estado') || '';
 
   const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState(estadoUrl);
 
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
@@ -38,6 +41,12 @@ function Sucursales() {
 
   const { toasts, success, error } = useToast();
 
+
+
+  useEffect(() => {
+    const estado = searchParams.get('estado') || '';
+    setFiltroEstado(estado);
+  }, [searchParams]);
 
   // ─────────────────────────────────────────
   // CARGAR SUCURSALES
@@ -115,6 +124,9 @@ function Sucursales() {
   const activas =
     sucursales.filter((s) => s.activo).length;
 
+  const inactivas =
+    sucursales.filter((s) => !s.activo).length;
+    
   const tiendas =
     sucursales.filter(
       (s) => s.tipo === 'TIENDA_FISICA'
@@ -309,9 +321,15 @@ function Sucursales() {
         />
 
         <StatBox
-          icon="🟢"
-          label="Activas"
-          value={activas}
+        icon="🟢"
+        label="Activas"
+        value={activas}
+        />
+
+        <StatBox
+        icon="🔴"
+        label="Inactivas"
+        value={inactivas}
         />
 
         <StatBox
@@ -348,29 +366,25 @@ function Sucursales() {
 
 
         <select
-          className="input filter-select"
-          value={filtroTipo}
-          onChange={(e) =>
-            setFiltroTipo(e.target.value)
-          }
-        >
+            className="input filter-select"
+            value={filtroTipo}
+            onChange={(e) => setFiltroTipo(e.target.value)}
+            >
+            <option value="">
+                Todos los tipos
+            </option>
 
-          <option value="">
-            Todos los tipos
-          </option>
+            <option value="TIENDA_FISICA">
+                Tienda Física
+            </option>
 
-          <option value="TIENDA_FISICA">
-            Tienda Física
-          </option>
+            <option value="BODEGA_CENTRAL">
+                Bodega Central
+            </option>
 
-          <option value="BODEGA_CENTRAL">
-            Bodega Central
-          </option>
-
-          <option value="PUNTO_RETIRO">
-            Punto de Retiro
-          </option>
-
+            <option value="PUNTO_RETIRO">
+                Punto de Retiro
+            </option>
         </select>
 
 
@@ -416,7 +430,7 @@ function Sucursales() {
         <div className="card-header">
 
           <span className="card-title">
-            🏪 Gestión de Sucursales
+            🏪 {tituloFiltroEstado(filtroEstado)}
           </span>
 
           <span className="badge badge-default">
@@ -955,6 +969,18 @@ function formatTipo(tipo) {
 
   return tipos[tipo] || tipo;
 
+}
+
+function tituloFiltroEstado(estado) {
+  if (estado === 'ACTIVA') {
+    return 'Sucursales activas';
+  }
+
+  if (estado === 'INACTIVA') {
+    return 'Sucursales inactivas';
+  }
+
+  return 'Todas las sucursales';
 }
 
 

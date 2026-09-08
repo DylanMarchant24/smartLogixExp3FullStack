@@ -11,13 +11,28 @@ import './StatCard.css';
  *   icon    {string}  – emoji o texto para el ícono
  *   color   {string}  – variante de color: 'blue' | 'green' | 'orange' | 'purple' | 'red'
  *   sub     {string}  – texto secundario opcional
+ *   onClick {function} – acción opcional al hacer click
  */
-function StatCard({ title, value, icon, color = 'blue', sub }) {
+function StatCard({ title, value, icon, color, sub, onClick }) {
   return (
-    <div className={`stat-card stat-card--${color}`} role="region" aria-label={title}>
+    <div
+      className={`stat-card stat-card--${color} ${
+        onClick ? 'stat-card-clickable' : ''
+      }`}
+      role={onClick ? 'button' : 'region'}
+      aria-label={title}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          onClick();
+        }
+      }}
+      tabIndex={onClick ? 0 : undefined}
+    >
       <div className="stat-card__icon-wrap">
         <span className="stat-card__icon">{icon}</span>
       </div>
+
       <div className="stat-card__body">
         <p className="stat-card__title">{title}</p>
         <p className="stat-card__value">{value ?? '–'}</p>
