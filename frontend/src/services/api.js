@@ -137,10 +137,7 @@ export const crearSucursal = (data) =>
 export const actualizarSucursal = (id, data) =>
   sucursalesApi.put(`/${id}`, data).then((r) => r.data);
 
-export const activarSucursal = (id) =>
-  sucursalesApi.patch(`/${id}/activar`);
-
-export const desactivarSucursal = (id) =>
-  sucursalesApi.patch(`/${id}/desactivar`);
+export const cambiarEstadoSucursal = (id, activo) =>
+  sucursalesApi.patch(`/${id}/estado`, { activo }).then((r) => r.data);
 
 export default api;
