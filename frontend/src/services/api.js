@@ -12,6 +12,7 @@ const API_GATEWAY_URL = 'http://127.0.0.1:8085';
 
 const BASE = `${API_GATEWAY_URL}/api/bff`;
 const AUTH_BASE = `${API_GATEWAY_URL}/api/auth`;
+const PAGOS_BASE = `${API_GATEWAY_URL}/api/pagos`;
 
 const SUCURSALES_BASE = `${API_GATEWAY_URL}/api/sucursales`;
 
@@ -27,6 +28,10 @@ const authApi = axios.create({
   timeout: 10000,
 });
 
+const pagosApi = axios.create({
+  baseURL: PAGOS_BASE,
+  });
+  
 const sucursalesApi = axios.create({
   baseURL: SUCURSALES_BASE,
   headers: { 'Content-Type': 'application/json' },
@@ -35,6 +40,16 @@ const sucursalesApi = axios.create({
 
 // Interceptor JWT: agrega Authorization: Bearer TOKEN
 api.interceptors.request.use((config) => {
+  const token = getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+pagosApi.interceptors.request.use((config) => {
   const token = getToken();
 
   if (token) {
@@ -122,6 +137,15 @@ export const crearEnvio      = (data) => api.post('/envios', data).then((r) => r
 export const actualizarEnvio = (id, estado) =>
   api.patch(`/envios/${id}/estado`, { estado }).then((r) => r.data);
 
+// ── Pagos ───────────────────────────────────────────────────────────────────
+export const getPagos = () =>
+  pagosApi.get('').then((r) => r.data);
+
+export const procesarPago = (data) =>
+  pagosApi.post('/procesar', data).then((r) => r.data);
+
+export const getPagosPorPedido = (pedidoId) =>
+  pagosApi.get(`/pedido/${pedidoId}`).then((r) => r.data);
 
 // ── Sucursales ───────────────────────────────────────────────────────
 
