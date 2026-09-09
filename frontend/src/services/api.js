@@ -13,6 +13,7 @@ const API_GATEWAY_URL = 'http://127.0.0.1:8085';
 const BASE = `${API_GATEWAY_URL}/api/bff`;
 const AUTH_BASE = `${API_GATEWAY_URL}/api/auth`;
 
+const SUCURSALES_BASE = `${API_GATEWAY_URL}/api/sucursales`;
 
 const api = axios.create({
   baseURL: BASE,
@@ -22,6 +23,12 @@ const api = axios.create({
 
 const authApi = axios.create({
   baseURL: AUTH_BASE,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 10000,
+});
+
+const sucursalesApi = axios.create({
+  baseURL: SUCURSALES_BASE,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
 });
@@ -55,6 +62,16 @@ api.interceptors.response.use(
     return Promise.reject(new Error(msg));
   }
 );
+
+sucursalesApi.interceptors.request.use((config) => {
+  const token = getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
 
 // ── Autenticación ────────────────────────────────────────────────────────────
 export const login = async (username, password) => {
@@ -104,5 +121,23 @@ export const getEnvios       = ()     => api.get('/envios').then((r) => r.data);
 export const crearEnvio      = (data) => api.post('/envios', data).then((r) => r.data);
 export const actualizarEnvio = (id, estado) =>
   api.patch(`/envios/${id}/estado`, { estado }).then((r) => r.data);
+
+
+// ── Sucursales ───────────────────────────────────────────────────────
+
+export const getSucursales = () =>
+  sucursalesApi.get('').then((r) => r.data);
+
+export const getSucursalesActivas = () =>
+  sucursalesApi.get('/activas').then((r) => r.data);
+
+export const crearSucursal = (data) =>
+  sucursalesApi.post('', data).then((r) => r.data);
+
+export const actualizarSucursal = (id, data) =>
+  sucursalesApi.put(`/${id}`, data).then((r) => r.data);
+
+export const cambiarEstadoSucursal = (id, activo) =>
+  sucursalesApi.patch(`/${id}/estado`, { activo }).then((r) => r.data);
 
 export default api;

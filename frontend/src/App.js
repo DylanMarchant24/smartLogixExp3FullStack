@@ -7,6 +7,7 @@ import Inventario from './pages/Inventario';
 import Pedidos from './pages/Pedidos';
 import Envios from './pages/Envios';
 import Login from './pages/Login';
+import Sucursales from './pages/Sucursales';
 
 /**
  * App – Raíz de la aplicación.
@@ -32,6 +33,7 @@ function App() {
           <Route path="inventario" element={<Inventario />} />
           <Route path="pedidos" element={<Pedidos />} />
           <Route path="envios" element={<Envios />} />
+          <Route path="sucursales" element={<Sucursales />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>
