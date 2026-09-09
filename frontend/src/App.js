@@ -8,6 +8,7 @@ import Pedidos from './pages/Pedidos';
 import Envios from './pages/Envios';
 import Login from './pages/Login';
 import Pagos from './pages/Pagos';
+import Sucursales from './pages/Sucursales';
 
 /**
  * App – Raíz de la aplicación.
@@ -34,6 +35,7 @@ function App() {
           <Route path="pedidos" element={<Pedidos />} />
           <Route path="envios" element={<Envios />} />
           <Route path="pagos" element={<Pagos />} />
+          <Route path="sucursales" element={<Sucursales />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>

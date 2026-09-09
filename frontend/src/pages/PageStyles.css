@@ -26,3 +26,93 @@
   font-family: 'Courier New', monospace;
   color: var(--primary);
 }
+
+/* ── Sucursales ───────────────────────────────────── */
+
+.sucursales-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.sucursal-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sucursal-stat-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  border-radius: 10px;
+  font-size: 1.3rem;
+}
+
+.sucursal-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sucursal-stat-label {
+  font-size: .75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.sucursales-toolbar {
+  align-items: stretch;
+}
+
+.sucursales-toolbar > input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.filter-select {
+  width: auto;
+  min-width: 170px;
+}
+
+.table-secondary {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.modal-large {
+  max-width: 650px;
+}
+
+@media (max-width: 1100px) {
+  .sucursales-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .sucursales-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sucursales-toolbar {
+    flex-direction: column;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .modal-large {
+    max-width: calc(100% - 24px);
+  }
+}

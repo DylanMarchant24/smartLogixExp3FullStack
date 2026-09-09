@@ -14,6 +14,8 @@ const BASE = `${API_GATEWAY_URL}/api/bff`;
 const AUTH_BASE = `${API_GATEWAY_URL}/api/auth`;
 const PAGOS_BASE = `${API_GATEWAY_URL}/api/pagos`;
 
+const SUCURSALES_BASE = `${API_GATEWAY_URL}/api/sucursales`;
+
 const api = axios.create({
   baseURL: BASE,
   headers: { 'Content-Type': 'application/json' },
@@ -28,6 +30,10 @@ const authApi = axios.create({
 
 const pagosApi = axios.create({
   baseURL: PAGOS_BASE,
+  });
+  
+const sucursalesApi = axios.create({
+  baseURL: SUCURSALES_BASE,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
 });
@@ -71,6 +77,16 @@ api.interceptors.response.use(
     return Promise.reject(new Error(msg));
   }
 );
+
+sucursalesApi.interceptors.request.use((config) => {
+  const token = getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
 
 // ── Autenticación ────────────────────────────────────────────────────────────
 export const login = async (username, password) => {
@@ -130,5 +146,22 @@ export const procesarPago = (data) =>
 
 export const getPagosPorPedido = (pedidoId) =>
   pagosApi.get(`/pedido/${pedidoId}`).then((r) => r.data);
+
+// ── Sucursales ───────────────────────────────────────────────────────
+
+export const getSucursales = () =>
+  sucursalesApi.get('').then((r) => r.data);
+
+export const getSucursalesActivas = () =>
+  sucursalesApi.get('/activas').then((r) => r.data);
+
+export const crearSucursal = (data) =>
+  sucursalesApi.post('', data).then((r) => r.data);
+
+export const actualizarSucursal = (id, data) =>
+  sucursalesApi.put(`/${id}`, data).then((r) => r.data);
+
+export const cambiarEstadoSucursal = (id, activo) =>
+  sucursalesApi.patch(`/${id}/estado`, { activo }).then((r) => r.data);
 
 export default api;
