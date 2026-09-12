@@ -1,18 +1,15 @@
 import axios from 'axios';
-import { clearSession, getToken, saveSession } from './auth';
+import { clearSession, getToken } from './auth';
+import { msalInstance, loginRequest } from '../config/msalConfig';
 
 /**
- * PATRÓN: Service Layer (Frontend)
- * Centraliza todas las llamadas HTTP al BFF en un único módulo.
- * El frontend nunca llama directamente a los microservicios;
- * siempre pasa por el BFF (puerto 8080).
+ * PATRÓN: Service Layer (Frontend Multicloud)
+ * Centraliza las llamadas HTTP apuntando al AWS API Gateway.
+ * Adquiere tokens OIDC de Azure MSAL automáticamente para cada petición.
  */
 
-const API_GATEWAY_URL = 'http://127.0.0.1:8085';
-
-const BASE = `${API_GATEWAY_URL}/api/bff`;
-const AUTH_BASE = `${API_GATEWAY_URL}/api/auth`;
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8085';
+const BASE = API_BASE_URL.replace(/\/$/, '') + (API_BASE_URL.includes('/api/bff') ? '' : '/api/bff');
 
 const api = axios.create({
   baseURL: BASE,
@@ -20,15 +17,30 @@ const api = axios.create({
   timeout: 10000,
 });
 
-const authApi = axios.create({
-  baseURL: AUTH_BASE,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 10000,
-});
+/**
+ * Adquiere el token de acceso desde MSAL de forma asíncrona (o fallback a localStorage).
+ */
+export const getAccessToken = async () => {
+  try {
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      const response = await msalInstance.acquireTokenSilent({
+        ...loginRequest,
+        account: accounts[0],
+      });
+      if (response && response.accessToken) {
+        return response.accessToken;
+      }
+    }
+  } catch (error) {
+    console.warn('MSAL silent token acquisition failed, fallback to stored token:', error);
+  }
+  return getToken();
+};
 
-// Interceptor JWT: agrega Authorization: Bearer TOKEN
-api.interceptors.request.use((config) => {
-  const token = getToken();
+// Interceptor JWT: adquiere token desde MSAL e inserta Authorization: Bearer <accessToken>
+api.interceptors.request.use(async (config) => {
+  const token = await getAccessToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -37,7 +49,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Interceptores ────────────────────────────────────────────────────────────
+// ── Interceptores de Respuesta ────────────────────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -48,40 +60,13 @@ api.interceptors.response.use(
         window.location.href = '/login?expired=true';
       }
 
-      return Promise.reject(new Error('Sesión expirada. Inicia sesión nuevamente.'));
+      return Promise.reject(new Error('Sesión expirada o no autorizada. Inicia sesión nuevamente.'));
     }
 
     const msg = error?.response?.data?.error || error.message || 'Error de conexión';
     return Promise.reject(new Error(msg));
   }
 );
-
-// ── Autenticación ────────────────────────────────────────────────────────────
-export const login = async (username, password) => {
-  try {
-    const response = await authApi.post('/login', { username, password });
-    const { token } = response.data;
-
-    saveSession(token, response.data.username || username);
-
-    return response.data;
-  } catch (error) {
-    if (error?.response?.status === 401) {
-      throw new Error('Usuario o contraseña incorrectos.');
-    }
-
-    if (error?.response?.data?.error) {
-      throw new Error(error.response.data.error);
-    }
-
-    throw new Error('No se pudo conectar con el servidor de autenticación.');
-  }
-};
-
-export const validarToken = () =>
-  authApi.post('/validate', null, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  }).then((r) => r.data);
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 export const getDashboard = () => api.get('/dashboard').then((r) => r.data);

@@ -1,81 +1,56 @@
-cat > .gitignore <<'EOF'
-# =========================
+# ==============================================================================
+# SmartLogix Monorepo Git Ignore Rules
+# ==============================================================================
+
 # Node / React
-# =========================
+node_modules/
+build/
+dist/
+.cache/
+.parcel-cache/
+coverage/
 frontend/node_modules/
 frontend/build/
 frontend/dist/
 frontend/.cache/
-frontend/.parcel-cache/
-
-# Cobertura temporal frontend
 frontend/coverage/
 
-# E2E / Cypress / Playwright
-frontend/playwright-report/
-frontend/test-results/
-frontend/cypress/videos/
-frontend/cypress/screenshots/
+# Environment Variables & Secrets
+.env
+.env.*
+*.env
+application-local.properties
+application-dev-local.properties
 
-# =========================
 # Maven / Java / Spring Boot
-# =========================
 **/target/
 *.class
 *.jar
 *.war
 *.ear
+.mvn/
+.gradle/
+build/
 
-# =========================
 # Logs
-# =========================
 *.log
 logs/
 **/logs/
 
-# =========================
-# IDE / Editores
-# =========================
+# IDE & Editor Files
 .idea/
 .vscode/
 *.iml
 *.ipr
 *.iws
+*.swp
+*~
 
-# =========================
-# Sistema operativo
-# =========================
+# Operating System
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# =========================
-# Variables locales / secretos
-# =========================
-.env
-*.env
-.env.*
-application-local.properties
-application-dev-local.properties
-
-# =========================
-# Archivos temporales
-# =========================
-*.tmp
-*.temp
-*.bak
-*.swp
-*~
-
-# =========================
-# MySQL / datos locales
-# =========================
+# Database & Local Data
 data/
 mysql-data/
-
-# =========================
-# Evidencias que SÍ deben subirse
-# Guardar evidencias en:
-# documentacion/ep3/
-# =========================
-EOF

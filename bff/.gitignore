@@ -1,0 +1,12 @@
+# Maven target directory
+/target/
+
+# IDE & Editor Files
+.idea/
+.vscode/
+*.iml
+
+# Logs & Temp
+*.log
+.env
+application-local.properties
