@@ -1,43 +1,21 @@
-package main.java.cl.duocuc.smartlogix.usuarios.services;
-
-import cl.duocuc.smartlogix.usuarios.model.Usuario;
-import cl.duocuc.smartlogix.usuarios.repository.UsuarioRepository;
+package cl.duocuc.smartlogix.usuarios.services;
+import cl.duocuc.smartlogix.usuarios.models.Usuario;
+import cl.duocuc.smartlogix.usuarios.repositories.UsuarioRepository;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-
+import java.time.LocalDateTime;
+import java.util.*;
 @Service
 public class UsuarioService {
-
-    private final UsuarioRepository usuarioRepository;
-
-    // Inyección de dependencias (Spring conecta el repositorio automáticamente)
-    public UsuarioService(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
-    }
-
-    public Usuario crearUsuario(Usuario usuario) {
-        // Aquí más adelante podríamos encriptar la contraseña antes de guardar
-        return usuarioRepository.save(usuario);
-    }
-
-    public List<Usuario> obtenerUsuariosActivos() {
-        return usuarioRepository.findByActivoTrue();
-    }
-
-    public Optional<Usuario> obtenerPorId(Long id) {
-        return usuarioRepository.findById(id);
-    }
-
-    public boolean eliminarUsuario(Long id) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
-        if (usuarioOpt.isPresent()) {
-            Usuario usuario = usuarioOpt.get();
-            usuario.setActivo(false); // Borrado lógico
-            usuarioRepository.save(usuario);
-            return true;
-        }
-        return false;
-    }
+ private final UsuarioRepository repo;
+ public UsuarioService(UsuarioRepository repo){this.repo=repo;}
+ public List<Usuario> listar(){return repo.findByActivoTrueOrderByIdDesc();}
+ public Optional<Usuario> porId(Long id){return repo.findById(id);}
+ public Optional<Usuario> porEmail(String email){return repo.findByEmailIgnoreCase(email);}
+ public Usuario crear(Usuario u){return repo.save(u);}
+ public Usuario registrarLogin(String email){
+  Usuario u=repo.findByEmailIgnoreCase(email).orElseThrow(()->new NoSuchElementException("Usuario no encontrado"));
+  if(!Boolean.TRUE.equals(u.getActivo())) throw new IllegalStateException("Usuario inactivo");
+  u.setUltimoLogin(LocalDateTime.now()); return repo.save(u);
+ }
+ public boolean desactivar(Long id){return repo.findById(id).map(u->{u.setActivo(false);repo.save(u);return true;}).orElse(false);}
 }
