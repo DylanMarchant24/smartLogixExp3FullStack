@@ -4,11 +4,11 @@ import { msalInstance, loginRequest } from '../config/msalConfig';
 
 /**
  * PATRÓN: Service Layer (Frontend Multicloud)
- * Centraliza las llamadas HTTP apuntando al AWS API Gateway.
+ * Centraliza las llamadas HTTP apuntando al BFF (puerto 8080 en local o AWS API Gateway).
  * Adquiere tokens OIDC de Azure MSAL automáticamente para cada petición.
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8085';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8080';
 const BASE = API_BASE_URL.replace(/\/$/, '') + (API_BASE_URL.includes('/api/bff') ? '' : '/api/bff');
 
 const api = axios.create({
@@ -33,37 +33,36 @@ export const getAccessToken = async () => {
       }
     }
   } catch (error) {
-    console.warn('MSAL silent token acquisition failed, fallback to stored token:', error);
+    console.warn('MSAL silent token acquisition warning:', error);
   }
   return getToken();
 };
 
 // Interceptor JWT: adquiere token desde MSAL e inserta Authorization: Bearer <accessToken>
 api.interceptors.request.use(async (config) => {
-  const token = await getAccessToken();
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  try {
+    const token = await getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (e) {
+    // Continuar petición sin header si falla obtención de token
   }
-
   return config;
 });
 
 // ── Interceptores de Respuesta ────────────────────────────────────────────────
+// NUNCA usar window.location.href en interceptores HTTP para evitar recargas en bucle (parpadeos).
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
       clearSession();
-
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login?expired=true';
-      }
-
-      return Promise.reject(new Error('Sesión expirada o no autorizada. Inicia sesión nuevamente.'));
+      const msg = error?.response?.data?.error || 'Sesión expirada o token no autorizado.';
+      return Promise.reject(new Error(msg));
     }
 
-    const msg = error?.response?.data?.error || error.message || 'Error de conexión';
+    const msg = error?.response?.data?.error || error.message || 'Error de conexión con el servidor';
     return Promise.reject(new Error(msg));
   }
 );

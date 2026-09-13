@@ -14,11 +14,12 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  if (msalIsAuthenticated || isAuthenticated()) {
+  const expired = new URLSearchParams(location.search).get('expired') === 'true';
+
+  // Si no viene marcado como 'expired' y ya está autenticado, navega al dashboard
+  if (!expired && (msalIsAuthenticated || isAuthenticated())) {
     return <Navigate to="/dashboard" replace />;
   }
-
-  const expired = new URLSearchParams(location.search).get('expired') === 'true';
 
   const handleMicrosoftLogin = async (usePopup = true) => {
     setLoading(true);
@@ -55,7 +56,7 @@ function Login() {
 
         {expired && (
           <div className="login-alert">
-            Tu sesión expiró. Inicia sesión nuevamente.
+            Tu sesión expiró o requieres volver a ingresar.
           </div>
         )}
 

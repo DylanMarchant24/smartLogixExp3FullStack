@@ -28,6 +28,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
+                            if (HttpMethod.GET.name().equalsIgnoreCase(request.getMethod())) {
+                                return;
+                            }
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
                             response.getWriter().write("{\"error\":\"Token JWT invalido o no proporcionado\"}");
@@ -41,8 +44,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/bff/**").permitAll()
 
-                        // Rutas criticas protegidas por OAuth2 JWT
+                        // Rutas criticas de escritura protegidas por OAuth2 JWT
                         .requestMatchers(HttpMethod.POST, "/api/bff/inventario").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/bff/inventario/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/bff/inventario/*").authenticated()

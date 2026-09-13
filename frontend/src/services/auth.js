@@ -23,6 +23,10 @@ export function getUsername() {
 export function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+}
+
+export function logout() {
+  clearSession();
   const accounts = msalInstance.getAllAccounts();
   if (accounts.length > 0) {
     msalInstance.logoutPopup().catch((err) => console.warn('MSAL logout error:', err));

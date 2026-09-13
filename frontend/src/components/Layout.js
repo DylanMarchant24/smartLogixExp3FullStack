@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { clearSession, getUsername } from '../services/auth';
+import { logout, getUsername } from '../services/auth';
 import './Layout.css';
 
 const NAV = [
@@ -20,7 +20,7 @@ function Layout() {
   const pageTitle = NAV.find((n) => location.pathname.startsWith(n.to))?.label || 'SmartLogix';
 
   function handleLogout() {
-    clearSession();
+    logout();
     navigate('/login', { replace: true });
   }
 
