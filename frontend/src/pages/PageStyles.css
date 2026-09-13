@@ -116,3 +116,44 @@
     max-width: calc(100% - 24px);
   }
 }
+
+/* ── Proveedores ───────────────────────────────── */
+
+.proveedores-toolbar {
+  align-items: stretch;
+}
+
+.proveedores-toolbar > input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.proveedores-table {
+  min-width: 1000px;
+}
+
+/* Acciones de proveedores */
+.proveedores-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+
+/* Responsive */
+@media (max-width: 700px) {
+
+  .proveedores-toolbar {
+    flex-direction: column;
+  }
+
+  .proveedores-toolbar > input {
+    width: 100%;
+    max-width: none !important;
+  }
+
+  .modal-large {
+    max-width: calc(100% - 24px);
+  }
+
+}

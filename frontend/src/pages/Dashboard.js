@@ -3,9 +3,8 @@ import StatCard from '../components/StatCard';
 import Spinner  from '../components/Spinner';
 import { useDashboard } from '../hooks/useDashboard';
 import { useNavigate } from 'react-router-dom';
-import { getSucursales } from '../services/api';
+import { getSucursales, getProveedores } from '../services/api';
 import './Dashboard.css';
-
 
 /**
  * Dashboard – página de inicio de SmartLogix.
@@ -16,18 +15,23 @@ function Dashboard() {
   const { data, loading, error, refresh } = useDashboard();
   const navigate = useNavigate();
   const [sucursales, setSucursales] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
 
   useEffect(() => {
-    const cargarSucursales = async () => {
+    const cargarDatosAdicionales = async () => {
       try {
-        const dataSucursales = await getSucursales();
+        const [dataSucursales, dataProveedores] = await Promise.all([
+          getSucursales(),
+          getProveedores()
+        ]);
         setSucursales(dataSucursales);
+        setProveedores(dataProveedores);
       } catch (error) {
-        console.error('Error al cargar sucursales:', error);
+        console.error('Error al cargar sucursales o proveedores:', error);
       }
     };
 
-    cargarSucursales();
+    cargarDatosAdicionales();
   }, []);
 
   const sucursalesActivas =
@@ -35,6 +39,9 @@ function Dashboard() {
 
   const sucursalesInactivas =
     sucursales.filter((s) => !s.activo).length;
+
+  const proveedoresActivos =
+    proveedores.filter((p) => p.activo).length;
 
   if (loading) return <Spinner message="Cargando dashboard…" />;
 
@@ -136,6 +143,15 @@ function Dashboard() {
           color="red"
           sub="Estado inactivo"
           onClick={() => navigate('/sucursales?estado=INACTIVA')}
+        />
+
+        <StatCard
+          title="Proveedores Activos"
+          value={proveedoresActivos}
+          icon="🤝"
+          color="green"
+          sub="Estado activo"
+          onClick={() => navigate('/proveedores')}
         />
 
       </div>

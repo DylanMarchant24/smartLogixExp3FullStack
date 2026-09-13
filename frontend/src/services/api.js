@@ -231,4 +231,31 @@ export const actualizarSucursal = (id, data) =>
 export const cambiarEstadoSucursal = (id, activo) =>
   sucursalesApi.patch(`/${id}/estado`, { activo }).then((r) => r.data);
 
+// ── Proveedores ───────────────────────────────────────────────────────
+
+export const getProveedores = async () => {
+  const response = await api.get('/proveedores');
+  return response.data;
+};
+
+export const createProveedor = async (proveedorData) => {
+  const response = await api.post('/proveedores', proveedorData);
+  return response.data;
+};
+
+export const updateProveedor = async (id, proveedorData) => {
+  const response = await api.put(`/proveedores/${id}`, proveedorData);
+  return response.data;
+};
+
+export const deleteProveedor = async (id) => {
+  const response = await api.delete(`/proveedores/${id}`);
+  return response.data;
+};
+
+export const toggleEstadoProveedor = async (id, estado) => {
+  const response = await api.put(`/proveedores/${id}/estado`, { activo: estado });
+  return response.data;
+};
+
 export default api;
