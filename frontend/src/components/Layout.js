@@ -10,6 +10,7 @@ const NAV = [
   { to: '/envios', icon: '🚚', label: 'Envíos' },
   { to: '/pagos', icon: '💳', label: 'Pagos' },
   { to: '/sucursales', icon: '🏪', label: 'Sucursales' },
+  { to: '/usuarios', icon: '👥', label: 'Usuarios' },
 ];
 
 function Layout() {
