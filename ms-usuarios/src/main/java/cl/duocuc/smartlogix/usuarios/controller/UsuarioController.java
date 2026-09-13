@@ -1,4 +1,4 @@
-package cl.duocuc.smartlogix.usuarios.controllers;
+package cl.duocuc.smartlogix.usuarios.controller;
 import cl.duocuc.smartlogix.usuarios.models.Usuario;
 import cl.duocuc.smartlogix.usuarios.services.UsuarioService;
 import jakarta.validation.Valid;

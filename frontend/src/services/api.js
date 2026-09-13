@@ -8,37 +8,44 @@ import { clearSession, getToken, saveSession } from './auth';
  * siempre pasa por el BFF (puerto 8080).
  */
 
-const API_GATEWAY_URL = 'http://127.0.0.1:8085';
+const API_GATEWAY_URL = 'http://localhost:8085';
 
 const BASE = `${API_GATEWAY_URL}/api/bff`;
 const AUTH_BASE = `${API_GATEWAY_URL}/api/auth`;
 const PAGOS_BASE = `${API_GATEWAY_URL}/api/pagos`;
-
 const SUCURSALES_BASE = `${API_GATEWAY_URL}/api/sucursales`;
 const USUARIOS_BASE = `${API_GATEWAY_URL}/api/usuarios`;
 
+const defaultConfig = {
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+};
+
 const api = axios.create({
   baseURL: BASE,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 10000,
+  ...defaultConfig,
 });
 
 const authApi = axios.create({
   baseURL: AUTH_BASE,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 10000,
+  ...defaultConfig,
 });
 
 const pagosApi = axios.create({
   baseURL: PAGOS_BASE,
-  });
-  
-const usuariosApi = axios.create({ baseURL: USUARIOS_BASE, headers: { 'Content-Type': 'application/json' }, timeout: 10000 });
+  ...defaultConfig,
+});
 
 const sucursalesApi = axios.create({
   baseURL: SUCURSALES_BASE,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 10000,
+  ...defaultConfig,
+});
+
+const usuariosApi = axios.create({
+  baseURL: USUARIOS_BASE,
+  ...defaultConfig,
 });
 
 // Interceptor JWT: agrega Authorization: Bearer TOKEN
@@ -82,8 +89,41 @@ api.interceptors.response.use(
 );
 
 usuariosApi.interceptors.request.use((config) => {
-  const token = getToken(); if (token) config.headers.Authorization = `Bearer ${token}`; return config;
+  const token = getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
 });
+
+usuariosApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      clearSession();
+
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?expired=true';
+      }
+
+      return Promise.reject(
+        new Error('Sesión expirada. Inicia sesión nuevamente.')
+      );
+    }
+
+    const message =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      'No se pudieron cargar los usuarios.';
+
+    return Promise.reject(new Error(message));
+  }
+);
 
 sucursalesApi.interceptors.request.use((config) => {
   const token = getToken();
@@ -155,8 +195,25 @@ export const getPagosPorPedido = (pedidoId) =>
   pagosApi.get(`/pedido/${pedidoId}`).then((r) => r.data);
 
 // ── Usuarios
-export const getUsuarios = () => usuariosApi.get('').then((r) => r.data);
+export const getUsuarios = async () => {
+  const response = await usuariosApi.get('/');
+  return response.data;
+};
 
+export const getUsuarioPorId = async (id) => {
+  const response = await usuariosApi.get(`/${id}`);
+  return response.data;
+};
+
+export const crearUsuario = async (data) => {
+  const response = await usuariosApi.post('/', data);
+  return response.data;
+};
+
+export const desactivarUsuario = async (id) => {
+  const response = await usuariosApi.delete(`/${id}`);
+  return response.data;
+};
 // ── Sucursales ───────────────────────────────────────────────────────
 
 export const getSucursales = () =>
