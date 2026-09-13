@@ -1,20 +1,20 @@
 import axios from 'axios';
 import { clearSession, getToken, saveSession } from './auth';
+import { msalInstance, loginRequest } from '../config/msalConfig';
 
 /**
- * PATRÓN: Service Layer (Frontend)
- * Centraliza todas las llamadas HTTP al BFF en un único módulo.
- * El frontend nunca llama directamente a los microservicios;
- * siempre pasa por el BFF (puerto 8080).
+ * PATRÓN: Service Layer (Frontend Multicloud)
+ * Centraliza las llamadas HTTP apuntando al BFF (puerto 8080 en local o AWS API Gateway).
+ * Adquiere tokens OIDC de Azure MSAL automáticamente para cada petición.
  */
 
-const API_GATEWAY_URL = 'http://localhost:8085';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8080';
+const BASE = API_BASE_URL.replace(/\/$/, '') + (API_BASE_URL.includes('/api/bff') ? '' : '/api/bff');
 
-const BASE = `${API_GATEWAY_URL}/api/bff`;
-const AUTH_BASE = `${API_GATEWAY_URL}/api/auth`;
-const PAGOS_BASE = `${API_GATEWAY_URL}/api/pagos`;
-const SUCURSALES_BASE = `${API_GATEWAY_URL}/api/sucursales`;
-const USUARIOS_BASE = `${API_GATEWAY_URL}/api/usuarios`;
+const AUTH_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/auth`;
+const PAGOS_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/pagos`;
+const SUCURSALES_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/sucursales`;
+const USUARIOS_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/usuarios`;
 
 const defaultConfig = {
   headers: {
@@ -48,92 +48,63 @@ const usuariosApi = axios.create({
   ...defaultConfig,
 });
 
-// Interceptor JWT: agrega Authorization: Bearer TOKEN
-api.interceptors.request.use((config) => {
-  const token = getToken();
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
-
-pagosApi.interceptors.request.use((config) => {
-  const token = getToken();
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
-
-// ── Interceptores ────────────────────────────────────────────────────────────
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error?.response?.status === 401) {
-      clearSession();
-
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login?expired=true';
+/**
+ * Adquiere el token de acceso desde MSAL de forma asíncrona (o fallback a localStorage).
+ */
+export const getAccessToken = async () => {
+  try {
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      const response = await msalInstance.acquireTokenSilent({
+        ...loginRequest,
+        account: accounts[0],
+      });
+      if (response && response.accessToken) {
+        return response.accessToken;
       }
-
-      return Promise.reject(new Error('Sesión expirada. Inicia sesión nuevamente.'));
     }
+  } catch (error) {
+    console.warn('MSAL silent token acquisition warning:', error);
+  }
+  return getToken();
+};
 
-    const msg = error?.response?.data?.error || error.message || 'Error de conexión';
+// Helper para adjuntar Bearer token a las instancias de Axios
+const addAuthHeader = async (config) => {
+  try {
+    const token = await getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (e) {
+    // Continuar petición sin header si falla obtención de token
+  }
+  return config;
+};
+
+// Interceptores JWT: adquieren token desde MSAL o localStorage para cada cliente HTTP
+api.interceptors.request.use(addAuthHeader);
+pagosApi.interceptors.request.use(addAuthHeader);
+sucursalesApi.interceptors.request.use(addAuthHeader);
+usuariosApi.interceptors.request.use(addAuthHeader);
+
+// ── Interceptores de Respuesta ────────────────────────────────────────────────
+// NUNCA usar window.location.href en interceptores HTTP para evitar recargas en bucle (parpadeos).
+const handleResponseError = (error, defaultMsg = 'Error de conexión con el servidor') => {
+  if (error?.response?.status === 401) {
+    clearSession();
+    const msg = error?.response?.data?.error || error?.response?.data?.message || 'Sesión expirada o token no autorizado.';
     return Promise.reject(new Error(msg));
   }
-);
 
-usuariosApi.interceptors.request.use((config) => {
-  const token = getToken();
+  const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || defaultMsg;
+  return Promise.reject(new Error(msg));
+};
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
-
-usuariosApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error?.response?.status;
-
-    if (status === 401) {
-      clearSession();
-
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login?expired=true';
-      }
-
-      return Promise.reject(
-        new Error('Sesión expirada. Inicia sesión nuevamente.')
-      );
-    }
-
-    const message =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      'No se pudieron cargar los usuarios.';
-
-    return Promise.reject(new Error(message));
-  }
-);
-
-sucursalesApi.interceptors.request.use((config) => {
-  const token = getToken();
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
+api.interceptors.response.use((response) => response, (error) => handleResponseError(error));
+pagosApi.interceptors.response.use((response) => response, (error) => handleResponseError(error, 'No se pudieron procesar los pagos.'));
+sucursalesApi.interceptors.response.use((response) => response, (error) => handleResponseError(error, 'No se pudieron cargar las sucursales.'));
+usuariosApi.interceptors.response.use((response) => response, (error) => handleResponseError(error, 'No se pudieron cargar los usuarios.'));
 
 // ── Autenticación ────────────────────────────────────────────────────────────
 export const login = async (username, password) => {
@@ -157,10 +128,12 @@ export const login = async (username, password) => {
   }
 };
 
-export const validarToken = () =>
-  authApi.post('/validate', null, {
-    headers: { Authorization: `Bearer ${getToken()}` },
+export const validarToken = async () => {
+  const token = await getAccessToken();
+  return authApi.post('/validate', null, {
+    headers: { Authorization: `Bearer ${token}` },
   }).then((r) => r.data);
+};
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 export const getDashboard = () => api.get('/dashboard').then((r) => r.data);
@@ -214,8 +187,8 @@ export const desactivarUsuario = async (id) => {
   const response = await usuariosApi.delete(`/${id}`);
   return response.data;
 };
-// ── Sucursales ───────────────────────────────────────────────────────
 
+// ── Sucursales ───────────────────────────────────────────────────────
 export const getSucursales = () =>
   sucursalesApi.get('').then((r) => r.data);
 
@@ -232,7 +205,6 @@ export const cambiarEstadoSucursal = (id, activo) =>
   sucursalesApi.patch(`/${id}/estado`, { activo }).then((r) => r.data);
 
 // ── Proveedores ───────────────────────────────────────────────────────
-
 export const getProveedores = async () => {
   const response = await api.get('/proveedores');
   return response.data;

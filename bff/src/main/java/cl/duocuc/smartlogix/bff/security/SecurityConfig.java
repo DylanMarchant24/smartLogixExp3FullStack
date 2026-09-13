@@ -9,24 +9,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,9 +28,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
+                            if (HttpMethod.GET.name().equalsIgnoreCase(request.getMethod())) {
+                                return;
+                            }
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"error\":\"Token JWT requerido\"}");
+                            response.getWriter().write("{\"error\":\"Token JWT invalido o no proporcionado\"}");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -48,9 +43,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/validate").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/bff/**").permitAll()
 
-                        // Rutas criticas protegidas por JWT
+                        // Rutas criticas de escritura protegidas por OAuth2 JWT
                         .requestMatchers(HttpMethod.POST, "/api/bff/inventario").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/bff/inventario/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/bff/inventario/*").authenticated()
@@ -64,7 +60,7 @@ public class SecurityConfig {
                         // Consultas publicas para dashboard y listados
                         .anyRequest().permitAll()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
@@ -73,10 +69,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

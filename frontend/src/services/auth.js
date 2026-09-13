@@ -1,3 +1,5 @@
+import { msalInstance } from '../config/msalConfig';
+
 const TOKEN_KEY = 'smartlogix_jwt_token';
 const USER_KEY = 'smartlogix_username';
 
@@ -11,7 +13,11 @@ export function getToken() {
 }
 
 export function getUsername() {
-  return localStorage.getItem(USER_KEY);
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    return accounts[0].name || accounts[0].username;
+  }
+  return localStorage.getItem(USER_KEY) || 'Usuario';
 }
 
 export function clearSession() {
@@ -19,6 +25,15 @@ export function clearSession() {
   localStorage.removeItem(USER_KEY);
 }
 
+export function logout() {
+  clearSession();
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    msalInstance.logoutPopup().catch((err) => console.warn('MSAL logout error:', err));
+  }
+}
+
 export function isAuthenticated() {
-  return Boolean(getToken());
+  const accounts = msalInstance.getAllAccounts();
+  return accounts.length > 0 || Boolean(getToken());
 }
