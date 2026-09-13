@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import StatCard from '../components/StatCard';
 import Spinner  from '../components/Spinner';
 import { useDashboard } from '../hooks/useDashboard';
+import { useNavigate } from 'react-router-dom';
+import { getSucursales, getProveedores } from '../services/api';
 import './Dashboard.css';
 
 /**
@@ -11,6 +13,35 @@ import './Dashboard.css';
  */
 function Dashboard() {
   const { data, loading, error, refresh } = useDashboard();
+  const navigate = useNavigate();
+  const [sucursales, setSucursales] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+
+  useEffect(() => {
+    const cargarDatosAdicionales = async () => {
+      try {
+        const [dataSucursales, dataProveedores] = await Promise.all([
+          getSucursales(),
+          getProveedores()
+        ]);
+        setSucursales(dataSucursales);
+        setProveedores(dataProveedores);
+      } catch (error) {
+        console.error('Error al cargar sucursales o proveedores:', error);
+      }
+    };
+
+    cargarDatosAdicionales();
+  }, []);
+
+  const sucursalesActivas =
+    sucursales.filter((s) => s.activo).length;
+
+  const sucursalesInactivas =
+    sucursales.filter((s) => !s.activo).length;
+
+  const proveedoresActivos =
+    proveedores.filter((p) => p.activo).length;
 
   if (loading) return <Spinner message="Cargando dashboard…" />;
 
@@ -47,12 +78,82 @@ function Dashboard() {
 
       {/* ── KPIs ── */}
       <div className="stats-grid">
-        <StatCard title="Productos en inventario" value={r.totalProductos}  icon="📦" color="blue"   sub="Total de SKUs registrados" />
-        <StatCard title="Pedidos totales"          value={r.totalPedidos}    icon="🛒" color="purple" sub="Todos los estados" />
-        <StatCard title="Pedidos aprobados"        value={r.pedidosAprobados} icon="✅" color="green" sub="Stock descontado OK" />
-        <StatCard title="Pedidos pendientes"       value={r.pedidosPendientes} icon="⏳" color="orange" sub="En espera de validación" />
-        <StatCard title="Envíos totales"           value={r.totalEnvios}     icon="🚚" color="blue"   sub="Despachos creados" />
-        <StatCard title="Envíos pendientes"        value={r.enviosPendientes} icon="🕐" color="red"   sub="Sin despachar" />
+
+        <StatCard
+          title="Productos en inventario"
+          value={r.totalProductos}
+          icon="📦"
+          color="blue"
+          sub="Total de SKUs registrados"
+        />
+
+        <StatCard
+          title="Pedidos totales"
+          value={r.totalPedidos}
+          icon="🛒"
+          color="purple"
+          sub="Todos los estados"
+        />
+
+        <StatCard
+          title="Pedidos aprobados"
+          value={r.pedidosAprobados}
+          icon="✅"
+          color="green"
+          sub="Stock descontado OK"
+        />
+
+        <StatCard
+          title="Pedidos pendientes"
+          value={r.pedidosPendientes}
+          icon="⏳"
+          color="orange"
+          sub="En espera de validación"
+        />
+
+        <StatCard
+          title="Envíos totales"
+          value={r.totalEnvios}
+          icon="🚚"
+          color="blue"
+          sub="Despachos creados"
+        />
+
+        <StatCard
+          title="Envíos pendientes"
+          value={r.enviosPendientes}
+          icon="🕐"
+          color="red"
+          sub="Sin despachar"
+        />
+
+        <StatCard
+          title="Sucursales activas"
+          value={sucursalesActivas}
+          icon="🟢"
+          color="green"
+          sub="Estado activo"
+          onClick={() => navigate('/sucursales?estado=ACTIVA')}
+        />
+
+        <StatCard
+          title="Sucursales inactivas"
+          value={sucursalesInactivas}
+          icon="🔴"
+          color="red"
+          sub="Estado inactivo"
+          onClick={() => navigate('/sucursales?estado=INACTIVA')}
+        />
+
+        <StatCard
+          title="Proveedores Activos"
+          value={proveedoresActivos}
+          icon="🤝"
+          color="green"
+          sub="Estado activo"
+          onClick={() => navigate('/proveedores')}
+        />
+
       </div>
 
       {/* ── Tablas resumen ── */}
