@@ -1,4 +1,4 @@
-package cl.duocuc.smartlogix.usuarios.services;
+package cl.duocuc.smartlogix.usuarios.service;
 import cl.duocuc.smartlogix.usuarios.models.Usuario;
 import cl.duocuc.smartlogix.usuarios.repositories.UsuarioRepository;
 import org.springframework.stereotype.Service;
