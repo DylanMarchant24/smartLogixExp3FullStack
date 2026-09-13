@@ -1,45 +1,21 @@
-package main.java.cl.duocuc.smartlogix.usuarios.controllers;
-
-import cl.duocuc.smartlogix.usuarios.model.Usuario;
-import cl.duocuc.smartlogix.usuarios.service.UsuarioService;
-import org.springframework.http.ResponseEntity;
+package cl.duocuc.smartlogix.usuarios.controllers;
+import cl.duocuc.smartlogix.usuarios.models.Usuario;
+import cl.duocuc.smartlogix.usuarios.services.UsuarioService;
+import jakarta.validation.Valid;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/usuarios")
+import java.util.*;
+@RestController @RequestMapping("/api/usuarios")
 public class UsuarioController {
-
-    private final UsuarioService usuarioService;
-
-    public UsuarioController(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
-    }
-
-    @PostMapping
-    public ResponseEntity<Usuario> crearUsuario(@RequestBody Usuario usuario) {
-        Usuario nuevoUsuario = usuarioService.crearUsuario(usuario);
-        return ResponseEntity.ok(nuevoUsuario);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Usuario>> listarUsuariosActivos() {
-        return ResponseEntity.ok(usuarioService.obtenerUsuariosActivos());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerUsuario(@PathVariable Long id) {
-        return usuarioService.obtenerPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
-        if (usuarioService.eliminarUsuario(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
+ private final UsuarioService service;
+ public UsuarioController(UsuarioService service){this.service=service;}
+ @GetMapping public List<UsuarioResponse> listar(){return service.listar().stream().map(UsuarioResponse::of).toList();}
+ @GetMapping("/{id}") public ResponseEntity<UsuarioResponse> porId(@PathVariable Long id){return service.porId(id).map(UsuarioResponse::of).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());}
+ @GetMapping("/email/{email}") public ResponseEntity<UsuarioResponse> porEmail(@PathVariable String email){return service.porEmail(email).map(UsuarioResponse::of).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());}
+ @PostMapping public ResponseEntity<UsuarioResponse> crear(@Valid @RequestBody Usuario u){return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioResponse.of(service.crear(u)));}
+ @PostMapping("/registrar-login") public UsuarioResponse registrarLogin(@RequestBody Map<String,String> body){return UsuarioResponse.of(service.registrarLogin(body.get("email")));}
+ @DeleteMapping("/{id}") public ResponseEntity<Void> desactivar(@PathVariable Long id){return service.desactivar(id)?ResponseEntity.noContent().build():ResponseEntity.notFound().build();}
+ public record UsuarioResponse(Long id,String nombre,String email,String rol,Boolean activo,java.time.LocalDateTime fechaCreacion,java.time.LocalDateTime ultimoLogin){
+  static UsuarioResponse of(Usuario u){return new UsuarioResponse(u.getId(),u.getNombre(),u.getEmail(),u.getRol(),u.getActivo(),u.getFechaCreacion(),u.getUltimoLogin());}
+ }
 }
