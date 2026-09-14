@@ -1,0 +1,336 @@
+version: "3.9"
+
+# ==============================================================================
+# SmartLogix - Orquestación completa del backend con Docker Compose.
+# Todas las variables sensibles/configurables se leen desde el archivo .env
+# (nunca se suben credenciales directamente en este archivo).
+# ==============================================================================
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: smartlogix-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - smartlogix-net
+
+  discovery-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: discovery-server
+    container_name: smartlogix-discovery
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    networks:
+      - smartlogix-net
+
+  ms-inventario:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-inventario
+    container_name: smartlogix-ms-inventario
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_inventario?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8081:8081"
+    networks:
+      - smartlogix-net
+
+  ms-pedidos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-pedidos
+    container_name: smartlogix-ms-pedidos
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_pedidos?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      INVENTARIO_URL: "http://ms-inventario:8081"
+    ports:
+      - "8082:8082"
+    networks:
+      - smartlogix-net
+
+  ms-envios:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-envios
+    container_name: smartlogix-ms-envios
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_envios?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8083:8083"
+    networks:
+      - smartlogix-net
+
+  ms-pagos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-pagos
+    container_name: smartlogix-ms-pagos
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_pagos?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8086:8086"
+    networks:
+      - smartlogix-net
+
+  ms-sucursales:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-sucursales
+    container_name: smartlogix-ms-sucursales
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_sucursales?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8087:8087"
+    networks:
+      - smartlogix-net
+
+  ms-calificaciones:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-calificaciones
+    container_name: smartlogix-ms-calificaciones
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_calificaciones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8088:8088"
+    networks:
+      - smartlogix-net
+
+  ms-proveedores:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-proveedores
+    container_name: smartlogix-ms-proveedores
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_proveedores?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8089:8089"
+    networks:
+      - smartlogix-net
+
+  ms-notificaciones:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-notificaciones
+    container_name: smartlogix-ms-notificaciones
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smartlogix_notificaciones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8090:8090"
+    networks:
+      - smartlogix-net
+
+  ms-cupones:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-cupones
+    container_name: smartlogix-ms-cupones
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smartlogix_cupones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8091:8091"
+    networks:
+      - smartlogix-net
+
+  ms-usuarios:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-usuarios
+    container_name: smartlogix-ms-usuarios
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_usuarios?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    ports:
+      - "8092:8092"
+    networks:
+      - smartlogix-net
+
+  bff:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: bff
+    container_name: smartlogix-bff
+    restart: unless-stopped
+    depends_on:
+      - discovery-server
+      - ms-inventario
+      - ms-pedidos
+      - ms-envios
+      - ms-pagos
+      - ms-sucursales
+      - ms-calificaciones
+      - ms-proveedores
+      - ms-notificaciones
+      - ms-cupones
+      - ms-usuarios
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      INVENTARIO_URL: "http://ms-inventario:8081"
+      PEDIDOS_URL: "http://ms-pedidos:8082"
+      ENVIOS_URL: "http://ms-envios:8083"
+      PAGOS_URL: "http://ms-pagos:8086"
+      SUCURSALES_URL: "http://ms-sucursales:8087"
+      CALIFICACIONES_URL: "http://ms-calificaciones:8088"
+      PROVEEDORES_URL: "http://ms-proveedores:8089"
+      NOTIFICACIONES_URL: "http://ms-notificaciones:8090"
+      CUPONES_URL: "http://ms-cupones:8091"
+      USUARIOS_URL: "http://ms-usuarios:8092"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES: "${AZURE_CLIENT_ID}"
+    ports:
+      - "8080:8080"
+    networks:
+      - smartlogix-net
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: api-gateway
+    container_name: smartlogix-api-gateway
+    restart: unless-stopped
+    depends_on:
+      - discovery-server
+      - bff
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      CORS_ALLOWED_ORIGINS: "${FRONTEND_URL}"
+    ports:
+      - "8085:8085"
+    networks:
+      - smartlogix-net
+
+networks:
+  smartlogix-net:
+    driver: bridge
+
+volumes:
+  mysql-data:

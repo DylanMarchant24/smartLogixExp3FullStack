@@ -1,0 +1,77 @@
+name: Deploy SmartLogix Backend a AWS (Docker + Terraform)
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Acción a ejecutar"
+        required: true
+        default: "apply"
+        type: choice
+        options:
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform ${{ github.event.inputs.action }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales de AWS Academy
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Crear terraform.tfvars desde GitHub Secrets
+        run: |
+          cat > terraform.tfvars <<EOF
+          aws_region           = "us-east-1"
+          instance_type        = "t3.large"
+          ssh_cidr             = "0.0.0.0/0"
+          key_pair_name        = "smartlogix-key"
+          public_key           = "${{ secrets.SSH_PUBLIC_KEY }}"
+          mysql_root_password  = "${{ secrets.MYSQL_ROOT_PASSWORD }}"
+          azure_client_id      = "${{ secrets.AZURE_CLIENT_ID }}"
+          azure_tenant_id      = "${{ secrets.AZURE_TENANT_ID }}"
+          frontend_url         = "${{ vars.FRONTEND_URL }}"
+          EOF
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: github.event.inputs.action == 'apply'
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Mostrar outputs (IP, URLs del BFF y Eureka)
+        if: github.event.inputs.action == 'apply'
+        run: terraform output
+
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        run: terraform destroy -auto-approve
