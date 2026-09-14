@@ -1,8 +1,8 @@
 version: "3.9"
 
 # ==============================================================================
-# SmartLogix - Orquestacion completa: backend (13 microservicios + MySQL)
-# y frontend (React servido con Nginx sobre HTTPS autofirmado).
+# SmartLogix - Orquestacion completa: backend (13 microservicios + MySQL),
+# proxy HTTPS delante del api-gateway, y frontend (React con Nginx HTTPS).
 # Todas las variables sensibles/configurables se leen desde el archivo .env
 # (nunca se suben credenciales directamente en este archivo).
 # ==============================================================================
@@ -329,6 +329,21 @@ services:
     networks:
       - smartlogix-net
 
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+      args:
+        SERVER_IP: 98.88.0.12
+    container_name: smartlogix-proxy
+    restart: unless-stopped
+    depends_on:
+      - api-gateway
+    ports:
+      - "8443:8443"
+    networks:
+      - smartlogix-net
+
   frontend:
     build:
       context: ./frontend
@@ -337,13 +352,14 @@ services:
         REACT_APP_AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
         REACT_APP_AZURE_TENANT_ID: ${AZURE_TENANT_ID}
         REACT_APP_AZURE_REDIRECT_URI: ${FRONTEND_URL}
-        REACT_APP_API_BASE_URL: http://98.88.0.12:8080
+        REACT_APP_API_BASE_URL: https://98.88.0.12:8443
         SERVER_IP: 98.88.0.12
     container_name: smartlogix-frontend
     restart: unless-stopped
     depends_on:
       - bff
       - api-gateway
+      - proxy
     ports:
       - "3000:80"
       - "3443:443"
