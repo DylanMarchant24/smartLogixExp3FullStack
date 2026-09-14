@@ -63,6 +63,27 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Reconciliar recursos huérfanos (recuperación de un apply previo interrumpido)
+        if: github.event.inputs.action == 'apply'
+        run: |
+          set +e
+          SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=smartlogix-sg --query 'SecurityGroups[0].GroupId' --output text --region us-east-1 2>/dev/null)
+          if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
+            echo "Security group huérfano encontrado ($SG_ID) - importando al state"
+            terraform import aws_security_group.smartlogix_sg "$SG_ID" || true
+          fi
+          aws ec2 describe-key-pairs --key-names smartlogix-key --region us-east-1 >/dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "Key pair huérfano encontrado - importando al state"
+            terraform import aws_key_pair.smartlogix_key smartlogix-key || true
+          fi
+          API_ID=$(aws apigatewayv2 get-apis --query "Items[?Name=='smartlogix-api-gateway'].ApiId" --output text --region us-east-1 2>/dev/null | awk '{print $1}')
+          if [ -n "$API_ID" ] && [ "$API_ID" != "None" ]; then
+            echo "API Gateway huérfano encontrado ($API_ID) - importando al state"
+            terraform import aws_apigatewayv2_api.smartlogix_api "$API_ID" || true
+          fi
+          exit 0
+
       - name: Terraform Plan
         if: github.event.inputs.action == 'apply'
         run: terraform plan -out=tfplan
