@@ -63,6 +63,16 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Diagnostico de solo lectura (instancias y ENIs existentes)
+        run: |
+          set +e
+          echo "--- Instancias EC2 (todas, cualquier estado) ---"
+          aws ec2 describe-instances --region us-east-1 --query 'Reservations[].Instances[].{ID:InstanceId,State:State.Name,Name:Tags[?Key==`Name`]|[0].Value,SG:SecurityGroups}' --output table
+          echo "--- ENIs asociadas a smartlogix-sg ---"
+          SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=smartlogix-sg --query 'SecurityGroups[0].GroupId' --output text --region us-east-1 2>/dev/null)
+          aws ec2 describe-network-interfaces --filters Name=group-id,Values="$SG_ID" --region us-east-1 --query 'NetworkInterfaces[].{ENI:NetworkInterfaceId,Status:Status,Attachment:Attachment.InstanceId,Desc:Description}' --output table
+          exit 0
+
       - name: Limpiar recursos huérfanos (recuperación de un apply previo interrumpido)
         if: github.event.inputs.action == 'apply'
         run: |
