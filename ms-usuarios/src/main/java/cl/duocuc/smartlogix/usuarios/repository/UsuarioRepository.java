@@ -1,5 +1,5 @@
 package cl.duocuc.smartlogix.usuarios.repository;
-import cl.duocuc.smartlogix.usuarios.models.Usuario;
+import cl.duocuc.smartlogix.usuarios.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.*;
 public interface UsuarioRepository extends JpaRepository<Usuario,Long>{

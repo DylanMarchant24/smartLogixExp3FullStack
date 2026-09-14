@@ -1,6 +1,6 @@
 package cl.duocuc.smartlogix.usuarios.service;
-import cl.duocuc.smartlogix.usuarios.models.Usuario;
-import cl.duocuc.smartlogix.usuarios.repositories.UsuarioRepository;
+import cl.duocuc.smartlogix.usuarios.model.Usuario;
+import cl.duocuc.smartlogix.usuarios.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
