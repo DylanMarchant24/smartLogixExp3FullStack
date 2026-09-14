@@ -46,7 +46,7 @@ export const msalConfig = {
 };
 
 export const loginRequest = {
-  scopes: ['api://65187167-4bfc-4ef5-a584-4654e7d0612d/api.access', 'openid', 'profile', 'email'],
+  scopes: ['api://56b5d583-bb7e-4030-a655-3834ed761639/api.access', 'openid', 'profile', 'email'],
 };
 
 export const msalInstance = new PublicClientApplication(msalConfig);
