@@ -77,36 +77,56 @@ jobs:
           aws ec2 describe-addresses --region us-east-1 --query 'Addresses[].{PublicIp:PublicIp,InstanceId:InstanceId,AllocationId:AllocationId}' --output table
           exit 0
 
-      - name: Limpiar recursos huérfanos (recuperación de un apply previo interrumpido)
+      - name: Importar recursos existentes en AWS al state de Terraform (idempotencia)
         if: github.event.inputs.action == 'apply'
         run: |
           set +e
           # El state de Terraform es local a este runner efimero (sin backend remoto),
-          # asi que si un apply anterior fallo a mitad de camino, estos recursos quedan
-          # en AWS pero el state actual no los conoce. En vez de reconciliar cada uno
-          # (fragil: rutas, integraciones y stage dependen del orden), se eliminan por
-          # completo aqui para que el apply los recree limpios de una sola vez.
-          API_ID=$(aws apigatewayv2 get-apis --query "Items[?Name=='smartlogix-api-gateway'].ApiId" --output text --region us-east-1 2>/dev/null | awk '{print $1}')
-          if [ -n "$API_ID" ] && [ "$API_ID" != "None" ]; then
-            echo "API Gateway huérfano encontrado ($API_ID) - eliminando"
-            aws apigatewayv2 delete-api --api-id "$API_ID" --region us-east-1 || true
-          fi
+          # asi que en cada ejecucion el state arranca vacio aunque los recursos ya
+          # existan en AWS de una corrida anterior. En vez de borrarlos y recrearlos,
+          # se importan al state si ya existen, para que terraform apply los reutilice
+          # en lugar de fallar intentando crearlos de nuevo.
+
+          echo "--- Security Group (smartlogix-sg) ---"
           SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=smartlogix-sg --query 'SecurityGroups[0].GroupId' --output text --region us-east-1 2>/dev/null)
           if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
-            echo "Security group huérfano encontrado ($SG_ID) - revisando interfaces de red dependientes"
-            ENI_IDS=$(aws ec2 describe-network-interfaces --filters Name=group-id,Values="$SG_ID" --query 'NetworkInterfaces[].NetworkInterfaceId' --output text --region us-east-1 2>/dev/null)
-            for ENI_ID in $ENI_IDS; do
-              echo "  Interfaz de red huérfana encontrada ($ENI_ID) - eliminando"
-              aws ec2 delete-network-interface --network-interface-id "$ENI_ID" --region us-east-1 || true
-            done
-            echo "Eliminando security group ($SG_ID)"
-            aws ec2 delete-security-group --group-id "$SG_ID" --region us-east-1 || true
+            echo "Security group existente encontrado ($SG_ID) - importando al state"
+            terraform import aws_security_group.smartlogix_sg "$SG_ID"
+          else
+            echo "No existe security group previo - lo creara terraform apply"
           fi
+
+          echo "--- Key Pair (smartlogix-key) ---"
           aws ec2 describe-key-pairs --key-names smartlogix-key --region us-east-1 >/dev/null 2>&1
           if [ $? -eq 0 ]; then
-            echo "Key pair huérfano encontrado - eliminando"
-            aws ec2 delete-key-pair --key-name smartlogix-key --region us-east-1 || true
+            echo "Key pair existente encontrado - importando al state"
+            terraform import aws_key_pair.smartlogix_key smartlogix-key
+          else
+            echo "No existe key pair previo - lo creara terraform apply"
           fi
+
+          echo "--- Instancia EC2 (smartlogix-backend) ---"
+          INSTANCE_ID=$(aws ec2 describe-instances --region us-east-1 \
+            --filters Name=tag:Name,Values=smartlogix-backend Name=instance-state-name,Values=pending,running,stopping,stopped \
+            --query 'Reservations[0].Instances[0].InstanceId' --output text 2>/dev/null)
+          if [ -n "$INSTANCE_ID" ] && [ "$INSTANCE_ID" != "None" ]; then
+            echo "Instancia EC2 existente encontrada ($INSTANCE_ID) - importando al state"
+            terraform import aws_instance.backend "$INSTANCE_ID"
+          else
+            echo "No existe instancia EC2 previa - la creara terraform apply"
+          fi
+
+          echo "--- Elastic IP (smartlogix-backend-eip) ---"
+          ALLOC_ID=$(aws ec2 describe-addresses --region us-east-1 \
+            --filters Name=tag:Name,Values=smartlogix-backend-eip \
+            --query 'Addresses[0].AllocationId' --output text 2>/dev/null)
+          if [ -n "$ALLOC_ID" ] && [ "$ALLOC_ID" != "None" ]; then
+            echo "Elastic IP existente encontrada ($ALLOC_ID) - importando al state"
+            terraform import aws_eip.backend_eip "$ALLOC_ID"
+          else
+            echo "No existe Elastic IP previa - la creara terraform apply"
+          fi
+
           exit 0
 
       - name: Terraform Plan
