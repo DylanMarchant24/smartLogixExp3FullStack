@@ -38,8 +38,8 @@ class ProveedorServiceTest {
         proveedorBase = Proveedor.builder()
                 .id(1L)
                 .rut("76.123.456-7")
-                .razonSocial("Logística & Embalajes S.A.")
-                .rubro("Embalaje")
+                .nombre("Logística & Embalajes S.A.")
+                .categoria("Embalaje")
                 .email("contacto@embalajes.cl")
                 .telefono("+56911223344")
                 .activo(true)
@@ -48,15 +48,15 @@ class ProveedorServiceTest {
 
         proveedorDTOBase = ProveedorDTO.builder()
                 .rut("76.123.456-7")
-                .razonSocial("Logística & Embalajes S.A.")
-                .rubro("Embalaje")
+                .nombre("Logística & Embalajes S.A.")
+                .categoria("Embalaje")
                 .email("contacto@embalajes.cl")
                 .telefono("+56911223344")
                 .activo(true)
                 .build();
     }
 
-    // ── Crear Proveedor ──────────────────────────────────────────────────────
+    // ── Crear Proveedor ──────────────────────────────────────────────────
 
     @Test
     @DisplayName("crear: registra y retorna el proveedor cuando el RUT no existe")
@@ -69,7 +69,7 @@ class ProveedorServiceTest {
         assertNotNull(resultado);
         assertEquals(1L, resultado.getId());
         assertEquals("76.123.456-7", resultado.getRut());
-        assertEquals("Logística & Embalajes S.A.", resultado.getRazonSocial());
+        assertEquals("Logística & Embalajes S.A.", resultado.getNombre());
         assertTrue(resultado.getActivo());
         verify(proveedorRepository, times(1)).existsByRut("76.123.456-7");
         verify(proveedorRepository, times(1)).save(any(Proveedor.class));
@@ -87,7 +87,7 @@ class ProveedorServiceTest {
         verify(proveedorRepository, never()).save(any(Proveedor.class));
     }
 
-    // ── Listar Activos ───────────────────────────────────────────────────────
+    // ── Listar Activos ──────────────────────────────────────────────
 
     @Test
     @DisplayName("listarActivos: retorna únicamente los proveedores en estado activo")
@@ -102,7 +102,7 @@ class ProveedorServiceTest {
         verify(proveedorRepository, times(1)).findByActivoTrue();
     }
 
-    // ── Borrado Lógico (Desactivar) ──────────────────────────────────────────
+    // ── Borrado Lógico (Desactivar) ───────────────────────────────────
 
     @Test
     @DisplayName("desactivar: cambia el estado activo a false en un proveedor existente")
