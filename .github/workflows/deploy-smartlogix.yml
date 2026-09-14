@@ -1,6 +1,9 @@
 name: Deploy SmartLogix Backend a AWS (Docker + Terraform)
 
 on:
+  push:
+    branches:
+      - deploy
   workflow_dispatch:
     inputs:
       action:
@@ -17,11 +20,13 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform ${{ github.event.inputs.action }}
+    name: Terraform ${{ github.event_name == 'push' && 'apply' || github.event.inputs.action }}
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: terraform
+    env:
+      TF_ACTION: ${{ github.event_name == 'push' && 'apply' || github.event.inputs.action }}
 
     steps:
       - name: Checkout del repositorio
@@ -61,17 +66,17 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        if: github.event.inputs.action == 'apply'
+        if: env.TF_ACTION == 'apply'
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        if: github.event.inputs.action == 'apply'
+        if: env.TF_ACTION == 'apply'
         run: terraform apply -auto-approve tfplan
 
       - name: Mostrar outputs (IP, URLs del BFF y Eureka)
-        if: github.event.inputs.action == 'apply'
+        if: env.TF_ACTION == 'apply'
         run: terraform output
 
       - name: Terraform Destroy
-        if: github.event.inputs.action == 'destroy'
+        if: env.TF_ACTION == 'destroy'
         run: terraform destroy -auto-approve
