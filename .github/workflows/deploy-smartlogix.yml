@@ -3,7 +3,7 @@ name: Deploy SmartLogix Backend a AWS (Docker + Terraform)
 on:
   push:
     branches:
-      - deploy
+      - develop
   workflow_dispatch:
     inputs:
       action:
