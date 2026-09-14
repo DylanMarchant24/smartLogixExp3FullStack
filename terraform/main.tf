@@ -68,14 +68,6 @@ resource "aws_security_group" "smartlogix_sg" {
   }
 
   ingress {
-    description = "API Gateway"
-    from_port   = 8085
-    to_port     = 8085
-    protocol    = "tcp"
-    cidr_blocks = [var.ssh_cidr]
-  }
-
-  ingress {
     description = "Microservicios internos (debug opcional)"
     from_port   = 8081
     to_port     = 8092
@@ -100,9 +92,9 @@ resource "aws_security_group" "smartlogix_sg" {
   }
 
   ingress {
-    description = "Proxy HTTPS delante del api-gateway (autofirmado)"
-    from_port   = 8443
-    to_port     = 8443
+    description = "API Gateway interno (Spring Cloud Gateway) - integracion desde AWS API Gateway"
+    from_port   = 8085
+    to_port     = 8085
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -155,4 +147,57 @@ resource "aws_eip" "backend_eip" {
   tags = {
     Name = "smartlogix-backend-eip"
   }
+}
+
+# ==============================================================================
+# AWS API Gateway (servicio administrado) - requisito de la pauta.
+# HTTP API que expone el api-gateway interno (Spring Cloud Gateway, puerto 8085
+# en la EC2) bajo una URL HTTPS publica gestionada por AWS, con certificado
+# valido emitido por AWS (sin certificados autofirmados, sin mixed content).
+# Integracion tipo HTTP_PROXY: reenvia cualquier metodo/ruta 1:1 hacia
+# http://<EIP>:8085/{proxy} dentro de la instancia EC2.
+# ==============================================================================
+
+resource "aws_apigatewayv2_api" "smartlogix_api" {
+  name          = "smartlogix-api-gateway"
+  protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = [var.frontend_url]
+    allow_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    allow_headers = ["Authorization", "Content-Type"]
+    max_age       = 300
+  }
+
+  tags = {
+    Name = "smartlogix-api-gateway"
+  }
+}
+
+resource "aws_apigatewayv2_integration" "smartlogix_backend_integration" {
+  api_id                 = aws_apigatewayv2_api.smartlogix_api.id
+  integration_type       = "HTTP_PROXY"
+  integration_method     = "ANY"
+  integration_uri        = "http://${aws_eip.backend_eip.public_ip}:8085/{proxy}"
+  payload_format_version = "1.0"
+  connection_type        = "INTERNET"
+  timeout_milliseconds   = 29000
+}
+
+resource "aws_apigatewayv2_route" "smartlogix_proxy_route" {
+  api_id    = aws_apigatewayv2_api.smartlogix_api.id
+  route_key = "ANY /{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.smartlogix_backend_integration.id}"
+}
+
+resource "aws_apigatewayv2_route" "smartlogix_root_route" {
+  api_id    = aws_apigatewayv2_api.smartlogix_api.id
+  route_key = "ANY /"
+  target    = "integrations/${aws_apigatewayv2_integration.smartlogix_backend_integration.id}"
+}
+
+resource "aws_apigatewayv2_stage" "smartlogix_stage" {
+  api_id      = aws_apigatewayv2_api.smartlogix_api.id
+  name        = "$default"
+  auto_deploy = true
 }

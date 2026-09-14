@@ -18,37 +18,34 @@ El objetivo técnico es resolver problemas de sincronización de stock, procesam
 ## 2. Arquitectura del sistema
 
 ```text
-┌────────────────────────────────────────────────────────┐
-│                  Frontend React (3000)                 │
-└────────────────────┬───────────────────────────────────┘
-                     │ HTTP/REST
-┌────────────────────▼───────────────────────────────────┐
-│              API Gateway Spring Cloud (8085)           │
-│        Enrutamiento, punto de entrada y filtros        │
-└────────────────────┬───────────────────────────────────┘
-                     │ lb://bff mediante Eureka
-┌────────────────────▼───────────────────────────────────┐
-│                  BFF Spring Boot (8080)                │
-│     Agrega datos y adapta respuestas para React        │
-└──────┬──────────────────┬─────────────────┬────────────┘
-       │                  │                 │
-       │ REST             │ REST            │ REST
-       ▼                  ▼                 ▼
-┌──────────────┐   ┌──────────────┐  ┌──────────────┐
-│ms-inventario │   │ ms-pedidos   │  │  ms-envios   │
-│    8081      │   │    8082      │  │    8083      │
-└──────┬───────┘   └──────┬───────┘  └──────┬───────┘
-       │                  │                 │
-       ▼                  ▼                 ▼
-┌──────────────┐   ┌──────────────┐  ┌──────────────┐
-│ db_inventario│   │ db_pedidos   │  │  db_envios   │
-│    MySQL     │   │    MySQL     │  │    MySQL     │
-└──────────────┘   └──────────────┘  └──────────────┘
+Frontend React (puerto 3000/3443)
+        |
+        |  HTTPS publico (dominio *.execute-api.amazonaws.com,
+        |  certificado TLS gestionado por AWS)
+        v
+AWS API Gateway -- servicio administrado, HTTP API
+(punto de entrada publico: TLS, CORS, integracion HTTP_PROXY)
+        |
+        |  HTTP interno -> EC2:8085
+        v
+API Gateway Spring Cloud (puerto 8085)
+(enrutamiento interno hacia BFF/microservicios via Eureka)
+        |
+        | lb://bff mediante Eureka
+BFF Spring Boot (puerto 8080)
+(agrega datos y adapta respuestas para React, valida JWT)
+   |            |             |
+   | REST       | REST        | REST
+   v            v             v
+ms-inventario  ms-pedidos   ms-envios
+   8081          8082         8083
+   |             |             |
+   v             v             v
+db_inventario  db_pedidos   db_envios
+  (MySQL)       (MySQL)      (MySQL)
 
-┌────────────────────────────────────────────────────────┐
-│          Discovery Server Eureka (8761)                │
-│ Registra API Gateway, BFF y microservicios disponibles │
-└────────────────────────────────────────────────────────┘
+Discovery Server Eureka (puerto 8761)
+(registra API Gateway interno, BFF y microservicios)
 ```
 
 ---
@@ -58,7 +55,8 @@ El objetivo técnico es resolver problemas de sincronización de stock, procesam
 | Patrón / Componente | Componente | Problema que resuelve |
 |---|---|---|
 | **Backend For Frontend (BFF)** | `bff` | Evita que React consuma directamente 3 microservicios y entrega respuestas optimizadas para la interfaz. |
-| **API Gateway** | `api-gateway` | Centraliza el punto de entrada, enruta solicitudes hacia el BFF y microservicios, y oculta la topología interna. |
+| **AWS API Gateway** | `terraform/main.tf` (`aws_apigatewayv2_api`) | Servicio administrado de AWS que expone el backend por HTTPS público (certificado gestionado por AWS), aplica CORS y reenvía el tráfico al `api-gateway` interno vía integración HTTP_PROXY. |
+| **API Gateway (interno)** | `api-gateway` | Spring Cloud Gateway: enruta solicitudes desde AWS API Gateway hacia el BFF y microservicios vía Eureka, y oculta la topología interna. |
 | **Service Discovery** | `discovery-server` | Permite registrar y localizar dinámicamente el BFF, API Gateway y microservicios mediante Eureka. |
 | **Monitoreo con Actuator** | `api-gateway`, `bff`, microservicios | Expone endpoints de salud y métricas para verificar el estado de los componentes. |
 | **Repository Pattern** | `ms-inventario`, `ms-pedidos`, `ms-envios` | Separa lógica de negocio y acceso a datos con Spring Data JPA. |
@@ -76,7 +74,7 @@ El objetivo técnico es resolver problemas de sincronización de stock, procesam
 - **Persistencia:** MySQL 8, Spring Data JPA, H2 para pruebas
 - **Frontend:** React 18, React Router v6, Axios, NPM
 - **Service Discovery:** Netflix Eureka
-- **API Gateway:** Spring Cloud Gateway
+- **API Gateway:** AWS API Gateway (HTTP API, servicio administrado) + Spring Cloud Gateway (enrutamiento interno)
 - **Monitoreo:** Spring Boot Actuator
 - **Calidad:** JUnit 5, Mockito, Testing Library, JaCoCo, coverage de React
 - **Versionamiento:** Git + Git Flow

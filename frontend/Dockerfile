@@ -30,7 +30,7 @@ RUN npm run build
 # ── Etapa 2: servir con Nginx + HTTPS autofirmado ──────────────────
 FROM nginx:1.27-alpine
 
-ARG SERVER_IP=50.17.87.206
+ARG SERVER_IP=127.0.0.1
 
 RUN apk add --no-cache openssl \
     && mkdir -p /etc/nginx/ssl \
