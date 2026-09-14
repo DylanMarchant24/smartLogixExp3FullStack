@@ -71,6 +71,10 @@ jobs:
           echo "--- ENIs asociadas a smartlogix-sg ---"
           SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=smartlogix-sg --query 'SecurityGroups[0].GroupId' --output text --region us-east-1 2>/dev/null)
           aws ec2 describe-network-interfaces --filters Name=group-id,Values="$SG_ID" --region us-east-1 --query 'NetworkInterfaces[].{ENI:NetworkInterfaceId,Status:Status,Attachment:Attachment.InstanceId,Desc:Description}' --output table
+          echo "--- IPs publicas y EIPs de instancias running ---"
+          aws ec2 describe-instances --region us-east-1 --filters Name=instance-state-name,Values=running --query 'Reservations[].Instances[].{ID:InstanceId,LaunchTime:LaunchTime,PublicIp:PublicIpAddress,PrivateIp:PrivateIpAddress}' --output table
+          echo "--- Elastic IPs asignadas ---"
+          aws ec2 describe-addresses --region us-east-1 --query 'Addresses[].{PublicIp:PublicIp,InstanceId:InstanceId,AllocationId:AllocationId}' --output table
           exit 0
 
       - name: Limpiar recursos huérfanos (recuperación de un apply previo interrumpido)
