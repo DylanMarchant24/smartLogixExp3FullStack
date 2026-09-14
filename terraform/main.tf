@@ -84,9 +84,17 @@ resource "aws_security_group" "smartlogix_sg" {
   }
 
   ingress {
-    description = "Frontend"
+    description = "Frontend HTTP (redirige a HTTPS)"
     from_port   = 3000
     to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Frontend HTTPS (autofirmado)"
+    from_port   = 3443
+    to_port     = 3443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
