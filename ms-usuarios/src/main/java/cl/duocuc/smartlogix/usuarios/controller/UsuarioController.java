@@ -1,6 +1,6 @@
 package cl.duocuc.smartlogix.usuarios.controller;
-import cl.duocuc.smartlogix.usuarios.models.Usuario;
-import cl.duocuc.smartlogix.usuarios.services.UsuarioService;
+import cl.duocuc.smartlogix.usuarios.model.Usuario;
+import cl.duocuc.smartlogix.usuarios.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
