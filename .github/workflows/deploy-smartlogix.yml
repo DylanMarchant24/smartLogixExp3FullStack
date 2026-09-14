@@ -80,51 +80,67 @@ jobs:
       - name: Importar recursos existentes en AWS al state de Terraform (idempotencia)
         if: github.event.inputs.action == 'apply'
         run: |
-          set +e
-          # El state de Terraform es local a este runner efimero (sin backend remoto),
-          # asi que en cada ejecucion el state arranca vacio aunque los recursos ya
-          # existan en AWS de una corrida anterior. En vez de borrarlos y recrearlos,
-          # se importan al state si ya existen, para que terraform apply los reutilice
-          # en lugar de fallar intentando crearlos de nuevo.
+          # NOTA: sin "set +e" a nivel global. Cada bloque decide explicitamente
+          # si un fallo de import es fatal (lo es: si el recurso existe en AWS
+          # pero no logramos importarlo, el apply posterior va a chocar igual
+          # con "already exists", asi que mejor cortar aqui con un mensaje claro
+          # que dejar que falle mas abajo con menos contexto).
+          set -u
+
+          import_if_exists () {
+            local desc="$1"
+            local addr="$2"
+            local remote_id="$3"
+            if [ -z "$remote_id" ] || [ "$remote_id" == "None" ]; then
+              echo "[$desc] No existe en AWS todavia - lo creara terraform apply"
+              return 0
+            fi
+            echo "[$desc] Encontrado en AWS (id=$remote_id) - importando a $addr"
+            if terraform import "$addr" "$remote_id"; then
+              echo "[$desc] Import OK"
+            else
+              echo "::error::[$desc] El recurso existe en AWS (id=$remote_id) pero 'terraform import' fallo. Revisa el log de arriba (motivo tipico: ya estaba en el state, o el resource address/atributos no calzan)."
+              exit 1
+            fi
+          }
 
           echo "--- Security Group (smartlogix-sg) ---"
           SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=smartlogix-sg --query 'SecurityGroups[0].GroupId' --output text --region us-east-1 2>/dev/null)
-          if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
-            echo "Security group existente encontrado ($SG_ID) - importando al state"
-            terraform import aws_security_group.smartlogix_sg "$SG_ID"
-          else
-            echo "No existe security group previo - lo creara terraform apply"
-          fi
+          import_if_exists "Security Group" "aws_security_group.smartlogix_sg" "$SG_ID"
 
           echo "--- Key Pair (smartlogix-key) ---"
-          aws ec2 describe-key-pairs --key-names smartlogix-key --region us-east-1 >/dev/null 2>&1
-          if [ $? -eq 0 ]; then
-            echo "Key pair existente encontrado - importando al state"
-            terraform import aws_key_pair.smartlogix_key smartlogix-key
+          if aws ec2 describe-key-pairs --key-names smartlogix-key --region us-east-1 >/dev/null 2>&1; then
+            import_if_exists "Key Pair" "aws_key_pair.smartlogix_key" "smartlogix-key"
           else
-            echo "No existe key pair previo - lo creara terraform apply"
+            echo "[Key Pair] No existe en AWS todavia - lo creara terraform apply"
           fi
 
           echo "--- Instancia EC2 (smartlogix-backend) ---"
           INSTANCE_ID=$(aws ec2 describe-instances --region us-east-1 \
             --filters Name=tag:Name,Values=smartlogix-backend Name=instance-state-name,Values=pending,running,stopping,stopped \
             --query 'Reservations[0].Instances[0].InstanceId' --output text 2>/dev/null)
-          if [ -n "$INSTANCE_ID" ] && [ "$INSTANCE_ID" != "None" ]; then
-            echo "Instancia EC2 existente encontrada ($INSTANCE_ID) - importando al state"
-            terraform import aws_instance.backend "$INSTANCE_ID"
-          else
-            echo "No existe instancia EC2 previa - la creara terraform apply"
-          fi
+          import_if_exists "Instancia EC2" "aws_instance.backend" "$INSTANCE_ID"
 
           echo "--- Elastic IP (smartlogix-backend-eip) ---"
           ALLOC_ID=$(aws ec2 describe-addresses --region us-east-1 \
             --filters Name=tag:Name,Values=smartlogix-backend-eip \
             --query 'Addresses[0].AllocationId' --output text 2>/dev/null)
-          if [ -n "$ALLOC_ID" ] && [ "$ALLOC_ID" != "None" ]; then
-            echo "Elastic IP existente encontrada ($ALLOC_ID) - importando al state"
-            terraform import aws_eip.backend_eip "$ALLOC_ID"
-          else
-            echo "No existe Elastic IP previa - la creara terraform apply"
+          import_if_exists "Elastic IP" "aws_eip.backend_eip" "$ALLOC_ID"
+
+          echo "--- AWS API Gateway (smartlogix-api-gateway) ---"
+          API_ID=$(aws apigatewayv2 get-apis --region us-east-1 \
+            --query "Items[?Name=='smartlogix-api-gateway'].ApiId | [0]" --output text 2>/dev/null)
+          import_if_exists "API Gateway" "aws_apigatewayv2_api.smartlogix_api" "$API_ID"
+
+          if [ -n "$API_ID" ] && [ "$API_ID" != "None" ]; then
+            echo "--- Stage \$default del API Gateway ---"
+            STAGE=$(aws apigatewayv2 get-stages --api-id "$API_ID" --region us-east-1 \
+              --query "Items[?StageName=='\$default'].StageName | [0]" --output text 2>/dev/null)
+            if [ -n "$STAGE" ] && [ "$STAGE" != "None" ]; then
+              import_if_exists "API Gateway Stage" "aws_apigatewayv2_stage.smartlogix_stage" "${API_ID}/\$default"
+            else
+              echo "[API Gateway Stage] No existe en AWS todavia - lo creara terraform apply"
+            fi
           fi
 
           exit 0
