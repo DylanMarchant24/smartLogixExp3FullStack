@@ -184,6 +184,19 @@ resource "aws_apigatewayv2_integration" "smartlogix_backend_integration" {
   timeout_milliseconds   = 29000
 }
 
+# Integracion separada para la ruta raiz "/": HTTP_PROXY con {proxy} en el URI
+# exige que la route_key contenga la variable de ruta {proxy+}. La raiz "/"
+# no la tiene, por lo que necesita su propia integracion sin path variable.
+resource "aws_apigatewayv2_integration" "smartlogix_backend_root_integration" {
+  api_id                 = aws_apigatewayv2_api.smartlogix_api.id
+  integration_type       = "HTTP_PROXY"
+  integration_method     = "ANY"
+  integration_uri        = "http://${aws_eip.backend_eip.public_ip}:8085/"
+  payload_format_version = "1.0"
+  connection_type        = "INTERNET"
+  timeout_milliseconds   = 29000
+}
+
 resource "aws_apigatewayv2_route" "smartlogix_proxy_route" {
   api_id    = aws_apigatewayv2_api.smartlogix_api.id
   route_key = "ANY /{proxy+}"
@@ -193,7 +206,7 @@ resource "aws_apigatewayv2_route" "smartlogix_proxy_route" {
 resource "aws_apigatewayv2_route" "smartlogix_root_route" {
   api_id    = aws_apigatewayv2_api.smartlogix_api.id
   route_key = "ANY /"
-  target    = "integrations/${aws_apigatewayv2_integration.smartlogix_backend_integration.id}"
+  target    = "integrations/${aws_apigatewayv2_integration.smartlogix_backend_root_integration.id}"
 }
 
 resource "aws_apigatewayv2_stage" "smartlogix_stage" {

@@ -81,6 +81,11 @@ jobs:
           if [ -n "$API_ID" ] && [ "$API_ID" != "None" ]; then
             echo "API Gateway huérfano encontrado ($API_ID) - importando al state"
             terraform import aws_apigatewayv2_api.smartlogix_api "$API_ID" || true
+            aws apigatewayv2 get-stage --api-id "$API_ID" --stage-name '$default' --region us-east-1 >/dev/null 2>&1
+            if [ $? -eq 0 ]; then
+              echo "Stage \$default huérfano encontrado - importando al state"
+              terraform import 'aws_apigatewayv2_stage.smartlogix_stage' "$API_ID/\$default" || true
+            fi
           fi
           exit 0
 
