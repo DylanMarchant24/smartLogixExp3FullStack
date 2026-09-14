@@ -75,7 +75,23 @@ public class ProveedorController {
         return ResponseEntity.ok(proveedorService.desactivar(id));
     }
 
-    // ── Manejadores de Excepciones ───────────────────────────────────────────
+    /**
+     * PATCH /api/proveedores/{id}/estado → Cambia el estado activo/inactivo
+     * a un valor explicito recibido en el body. Usado por el toggle del frontend
+     * para poder tanto activar como desactivar un proveedor.
+     */
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<ProveedorDTO> cambiarEstado(
+            @PathVariable Long id,
+            @RequestBody Map<String, Boolean> body) {
+        Boolean activo = body.get("activo");
+        if (activo == null) {
+            throw new IllegalArgumentException("El campo 'activo' es requerido");
+        }
+        return ResponseEntity.ok(proveedorService.cambiarEstado(id, activo));
+    }
+
+    // ── Manejadores de Excepciones ──────────────────────────────
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {

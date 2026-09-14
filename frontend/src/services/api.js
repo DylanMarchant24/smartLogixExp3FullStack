@@ -50,7 +50,7 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// ── Interceptores de Respuesta ────────────────────────────────────────
+// ── Interceptores de Respuesta ───────────────────────────────────────
 // NUNCA usar window.location.href en interceptores HTTP para evitar recargas en bucle (parpadeos).
 api.interceptors.response.use(
   (response) => response,
@@ -65,35 +65,35 @@ api.interceptors.response.use(
   }
 );
 
-// ── Dashboard ────────────────────────────────────────────────────────────────
+// ── Dashboard ───────────────────────────────────────────────
 export const getDashboard = () => api.get('/dashboard').then((r) => r.data);
 
-// ── Inventario ────────────────────────────────────────────────────────────────
+// ── Inventario ───────────────────────────────────────────────
 export const getInventario   = ()        => api.get('/inventario').then((r) => r.data);
 export const crearProducto   = (data)    => api.post('/inventario', data).then((r) => r.data);
 export const actualizarProducto = (id, data) =>
   api.put(`/inventario/${id}`, data).then((r) => r.data);
 export const eliminarProducto = (id)     => api.delete(`/inventario/${id}`).then((r) => r.data);
 
-// ── Pedidos ─────────────────────────────────────────────────────────────────────
+// ── Pedidos ─────────────────────────────────────────────────
 export const getPedidos    = ()     => api.get('/pedidos').then((r) => r.data);
 export const crearPedido   = (data) => api.post('/pedidos', data).then((r) => r.data);
 export const cambiarEstado = (id, estado) =>
   api.patch(`/pedidos/${id}/estado`, { estado }).then((r) => r.data);
 
-// ── Envíos ─────────────────────────────────────────────────────────────────────
+// ── Envíos ─────────────────────────────────────────────────
 export const getEnvios       = ()     => api.get('/envios').then((r) => r.data);
 export const crearEnvio      = (data) => api.post('/envios', data).then((r) => r.data);
 export const actualizarEnvio = (id, estado) =>
   api.patch(`/envios/${id}/estado`, { estado }).then((r) => r.data);
 
-// ── Pagos ────────────────────────────────────────────────────────────────────
+// ── Pagos ───────────────────────────────────────────────
 export const getPagos = () => api.get('/pagos').then((r) => r.data);
 export const procesarPago = (data) => api.post('/pagos/procesar', data).then((r) => r.data);
 export const getPagosPorPedido = (pedidoId) =>
   api.get(`/pagos/pedido/${pedidoId}`).then((r) => r.data);
 
-// ── Sucursales ──────────────────────────────────────────────────────────────────
+// ── Sucursales ────────────────────────────────────────────────
 export const getSucursales = () => api.get('/sucursales').then((r) => r.data);
 export const getSucursalesActivas = () => api.get('/sucursales/activas').then((r) => r.data);
 export const crearSucursal = (data) => api.post('/sucursales', data).then((r) => r.data);
@@ -101,17 +101,19 @@ export const actualizarSucursal = (id, data) => api.put(`/sucursales/${id}`, dat
 export const cambiarEstadoSucursal = (id, activo) =>
   api.patch(`/sucursales/${id}/estado`, { activo }).then((r) => r.data);
 
-// ── Usuarios ────────────────────────────────────────────────────────────────
+// ── Usuarios ───────────────────────────────────────────────
 export const getUsuarios = () => api.get('/usuarios').then((r) => r.data);
 
-// ── Proveedores ──────────────────────────────────────────────────────────────
+// ── Proveedores ───────────────────────────────────────────────
 export const getProveedores = () => api.get('/proveedores').then((r) => r.data);
 export const getProveedoresActivos = () => api.get('/proveedores/activos').then((r) => r.data);
 export const createProveedor = (data) => api.post('/proveedores', data).then((r) => r.data);
 export const updateProveedor = (id, data) => api.put(`/proveedores/${id}`, data).then((r) => r.data);
 export const desactivarProveedor = (id) => api.patch(`/proveedores/${id}/desactivar`).then((r) => r.data);
+export const toggleEstadoProveedor = (id, activo) =>
+  api.patch(`/proveedores/${id}/estado`, { activo }).then((r) => r.data);
 
-// ── Calificaciones ──────────────────────────────────────────────────────────
+// ── Calificaciones ────────────────────────────────────────────
 export const getCalificaciones = () => api.get('/calificaciones').then((r) => r.data);
 export const getCalificacionesPorProducto = (productoId) =>
   api.get(`/calificaciones/producto/${productoId}`).then((r) => r.data);
@@ -119,14 +121,14 @@ export const getPromedioCalificacion = (productoId) =>
   api.get(`/calificaciones/producto/${productoId}/promedio`).then((r) => r.data);
 export const crearCalificacion = (data) => api.post('/calificaciones', data).then((r) => r.data);
 
-// ── Cupones ──────────────────────────────────────────────────────────────────
+// ── Cupones ───────────────────────────────────────────────
 export const getCupones = () => api.get('/cupones').then((r) => r.data);
 export const getCuponPorId = (id) => api.get(`/cupones/${id}`).then((r) => r.data);
 export const crearCupon = (data) => api.post('/cupones', data).then((r) => r.data);
 export const desactivarCupon = (id) => api.patch(`/cupones/${id}/desactivar`).then((r) => r.data);
 export const validarCupon = (data) => api.post('/cupones/validar', data).then((r) => r.data);
 
-// ── Notificaciones ──────────────────────────────────────────────────────────
+// ── Notificaciones ────────────────────────────────────────────
 export const getNotificaciones = () => api.get('/notificaciones').then((r) => r.data);
 export const getNotificacionPorId = (id) => api.get(`/notificaciones/${id}`).then((r) => r.data);
 export const getNotificacionesPorDestinatario = (destinatario) =>

@@ -109,7 +109,22 @@ public class ProveedorService {
         return toDTO(guardado);
     }
 
-    // ── Mappers ──────────────────────────────────────────────────────────────
+    /**
+     * Cambia el estado (activo/inactivo) del proveedor a un valor explicito.
+     * A diferencia de desactivar(), permite tanto activar como desactivar,
+     * usado por el toggle de estado en el frontend.
+     */
+    @Transactional
+    public ProveedorDTO cambiarEstado(Long id, boolean activo) {
+        Proveedor existente = proveedorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con ID: " + id));
+
+        existente.setActivo(activo);
+        Proveedor guardado = proveedorRepository.save(existente);
+        return toDTO(guardado);
+    }
+
+    // ── Mappers ─────────────────────────────────────────────────────────
 
     public ProveedorDTO toDTO(Proveedor entity) {
         return ProveedorDTO.builder()

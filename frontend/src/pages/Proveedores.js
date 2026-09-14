@@ -3,7 +3,7 @@ import {
   getProveedores, 
   createProveedor, 
   updateProveedor, 
-  deleteProveedor, 
+  desactivarProveedor, 
   toggleEstadoProveedor 
 } from '../services/api';
 import Toast from '../components/Toast';
@@ -119,13 +119,13 @@ const Proveedores = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Desea eliminar definitivamente este proveedor?')) {
+    if (window.confirm('¿Desea desactivar este proveedor?')) {
       try {
-        await deleteProveedor(id);
-        showToast('Proveedor eliminado', 'success');
+        await desactivarProveedor(id);
+        showToast('Proveedor desactivado', 'success');
         fetchProveedores();
       } catch (err) {
-        showToast('Error al eliminar el proveedor', 'error');
+        showToast('Error al desactivar el proveedor', 'error');
       }
     }
   };
