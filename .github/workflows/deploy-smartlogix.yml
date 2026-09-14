@@ -79,7 +79,13 @@ jobs:
           fi
           SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=smartlogix-sg --query 'SecurityGroups[0].GroupId' --output text --region us-east-1 2>/dev/null)
           if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
-            echo "Security group huérfano encontrado ($SG_ID) - eliminando"
+            echo "Security group huérfano encontrado ($SG_ID) - revisando interfaces de red dependientes"
+            ENI_IDS=$(aws ec2 describe-network-interfaces --filters Name=group-id,Values="$SG_ID" --query 'NetworkInterfaces[].NetworkInterfaceId' --output text --region us-east-1 2>/dev/null)
+            for ENI_ID in $ENI_IDS; do
+              echo "  Interfaz de red huérfana encontrada ($ENI_ID) - eliminando"
+              aws ec2 delete-network-interface --network-interface-id "$ENI_ID" --region us-east-1 || true
+            done
+            echo "Eliminando security group ($SG_ID)"
             aws ec2 delete-security-group --group-id "$SG_ID" --region us-east-1 || true
           fi
           aws ec2 describe-key-pairs --key-names smartlogix-key --region us-east-1 >/dev/null 2>&1
