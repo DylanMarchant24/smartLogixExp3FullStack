@@ -20,16 +20,18 @@ public class ProveedorDTO {
     @NotBlank(message = "El RUT es obligatorio")
     private String rut;
 
-    @NotBlank(message = "La razón social es obligatoria")
-    private String razonSocial;
+    @NotBlank(message = "El nombre es obligatorio")
+    private String nombre;
 
-    private String rubro;
+    private String categoria;
 
     @NotBlank(message = "El correo electrónico es obligatorio")
     @Email(message = "El formato del correo electrónico es inválido")
     private String email;
 
     private String telefono;
+
+    private String direccion;
 
     private Boolean activo;
 

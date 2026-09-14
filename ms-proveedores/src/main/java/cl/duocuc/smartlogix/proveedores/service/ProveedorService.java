@@ -83,10 +83,11 @@ public class ProveedorService {
             existente.setRut(dto.getRut());
         }
 
-        existente.setRazonSocial(dto.getRazonSocial());
-        existente.setRubro(dto.getRubro());
+        existente.setNombre(dto.getNombre());
+        existente.setCategoria(dto.getCategoria());
         existente.setEmail(dto.getEmail());
         existente.setTelefono(dto.getTelefono());
+        existente.setDireccion(dto.getDireccion());
 
         if (dto.getActivo() != null) {
             existente.setActivo(dto.getActivo());
@@ -130,10 +131,11 @@ public class ProveedorService {
         return ProveedorDTO.builder()
                 .id(entity.getId())
                 .rut(entity.getRut())
-                .razonSocial(entity.getRazonSocial())
-                .rubro(entity.getRubro())
+                .nombre(entity.getNombre())
+                .categoria(entity.getCategoria())
                 .email(entity.getEmail())
                 .telefono(entity.getTelefono())
+                .direccion(entity.getDireccion())
                 .activo(entity.getActivo())
                 .fechaCreacion(entity.getFechaCreacion())
                 .fechaActualizacion(entity.getFechaActualizacion())
@@ -143,10 +145,11 @@ public class ProveedorService {
     public Proveedor toEntity(ProveedorDTO dto) {
         return Proveedor.builder()
                 .rut(dto.getRut())
-                .razonSocial(dto.getRazonSocial())
-                .rubro(dto.getRubro())
+                .nombre(dto.getNombre())
+                .categoria(dto.getCategoria())
                 .email(dto.getEmail())
                 .telefono(dto.getTelefono())
+                .direccion(dto.getDireccion())
                 .activo(dto.getActivo() != null ? dto.getActivo() : true)
                 .build();
     }

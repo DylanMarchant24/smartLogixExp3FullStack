@@ -30,12 +30,12 @@ public class Proveedor {
     @Column(nullable = false, unique = true)
     private String rut;
 
-    @NotBlank(message = "La razón social es obligatoria")
+    @NotBlank(message = "El nombre es obligatorio")
     @Column(nullable = false)
-    private String razonSocial;
+    private String nombre;
 
     @Column(length = 100)
-    private String rubro;
+    private String categoria;
 
     @NotBlank(message = "El email de contacto es obligatorio")
     @Email(message = "El email debe tener un formato válido")
@@ -44,6 +44,9 @@ public class Proveedor {
 
     @Column(length = 20)
     private String telefono;
+
+    @Column(length = 255)
+    private String direccion;
 
     @Column(nullable = false)
     @Builder.Default
