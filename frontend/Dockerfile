@@ -6,7 +6,7 @@
 # ==============================================================================
 
 # ── Etapa 1: build con Node ──────────────────────────────────────────
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
 ARG REACT_APP_AZURE_CLIENT_ID
@@ -20,7 +20,7 @@ ENV REACT_APP_AZURE_REDIRECT_URI=$REACT_APP_AZURE_REDIRECT_URI
 ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 COPY . .
 RUN npm run build
