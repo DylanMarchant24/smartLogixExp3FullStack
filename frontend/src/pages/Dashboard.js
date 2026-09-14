@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StatCard from '../components/StatCard';
 import Spinner  from '../components/Spinner';
 import { useDashboard } from '../hooks/useDashboard';
 import { useNavigate } from 'react-router-dom';
-import { getSucursales, getProveedores } from '../services/api';
+import { getSucursales, getProveedores, getCupones, getNotificaciones } from '../services/api';
 import './Dashboard.css';
 
 /**
@@ -16,18 +16,24 @@ function Dashboard() {
   const navigate = useNavigate();
   const [sucursales, setSucursales] = useState([]);
   const [proveedores, setProveedores] = useState([]);
+  const [cupones, setCupones] = useState([]);
+  const [notificaciones, setNotificaciones] = useState([]);
 
   useEffect(() => {
     const cargarDatosAdicionales = async () => {
       try {
-        const [dataSucursales, dataProveedores] = await Promise.all([
+        const [dataSucursales, dataProveedores, dataCupones, dataNotificaciones] = await Promise.all([
           getSucursales(),
-          getProveedores()
+          getProveedores(),
+          getCupones(),
+          getNotificaciones(),
         ]);
         setSucursales(dataSucursales);
         setProveedores(dataProveedores);
+        setCupones(dataCupones);
+        setNotificaciones(dataNotificaciones);
       } catch (error) {
-        console.error('Error al cargar sucursales o proveedores:', error);
+        console.error('Error al cargar datos adicionales del dashboard:', error);
       }
     };
 
@@ -42,6 +48,12 @@ function Dashboard() {
 
   const proveedoresActivos =
     proveedores.filter((p) => p.activo).length;
+
+  const cuponesActivos =
+    cupones.filter((c) => c.activo).length;
+
+  const notificacionesFallidas =
+    notificaciones.filter((n) => n.estado === 'FALLIDO').length;
 
   if (loading) return <Spinner message="Cargando dashboard…" />;
 
@@ -78,70 +90,28 @@ function Dashboard() {
 
       {/* ── KPIs ── */}
       <div className="stats-grid">
+        <StatCard title="Productos en inventario" value={r.totalProductos}  icon="📦" color="blue"   sub="Total de SKUs registrados" onClick={() => navigate('/inventario')} />
+        <StatCard title="Pedidos totales"          value={r.totalPedidos}    icon="🛒" color="purple" sub="Todos los estados" onClick={() => navigate('/pedidos')} />
+        <StatCard title="Pedidos aprobados"        value={r.pedidosAprobados} icon="✅" color="green" sub="Stock descontado OK" onClick={() => navigate('/pedidos')} />
+        <StatCard title="Pedidos pendientes"       value={r.pedidosPendientes} icon="⏳" color="orange" sub="En espera de validación" onClick={() => navigate('/pedidos')} />
+        <StatCard title="Envíos totales"           value={r.totalEnvios}     icon="🚚" color="blue"   sub="Despachos creados" onClick={() => navigate('/envios')} />
+        <StatCard title="Envíos pendientes"        value={r.enviosPendientes} icon="🕐" color="red"   sub="Sin despachar" onClick={() => navigate('/envios')} />
 
         <StatCard
-          title="Productos en inventario"
-          value={r.totalProductos}
-          icon="📦"
-          color="blue"
-          sub="Total de SKUs registrados"
-        />
-
-        <StatCard
-          title="Pedidos totales"
-          value={r.totalPedidos}
-          icon="🛒"
-          color="purple"
-          sub="Todos los estados"
-        />
-
-        <StatCard
-          title="Pedidos aprobados"
-          value={r.pedidosAprobados}
-          icon="✅"
-          color="green"
-          sub="Stock descontado OK"
-        />
-
-        <StatCard
-          title="Pedidos pendientes"
-          value={r.pedidosPendientes}
-          icon="⏳"
-          color="orange"
-          sub="En espera de validación"
-        />
-
-        <StatCard
-          title="Envíos totales"
-          value={r.totalEnvios}
-          icon="🚚"
-          color="blue"
-          sub="Despachos creados"
-        />
-
-        <StatCard
-          title="Envíos pendientes"
-          value={r.enviosPendientes}
-          icon="🕐"
-          color="red"
-          sub="Sin despachar"
-        />
-
-        <StatCard
-          title="Sucursales activas"
+          title="Sucursales Activas"
           value={sucursalesActivas}
-          icon="🟢"
+          icon="🏪"
           color="green"
-          sub="Estado activo"
+          sub="En operación"
           onClick={() => navigate('/sucursales?estado=ACTIVA')}
         />
 
         <StatCard
-          title="Sucursales inactivas"
+          title="Sucursales Inactivas"
           value={sucursalesInactivas}
-          icon="🔴"
+          icon="🏪"
           color="red"
-          sub="Estado inactivo"
+          sub="Fuera de operación"
           onClick={() => navigate('/sucursales?estado=INACTIVA')}
         />
 
@@ -152,6 +122,24 @@ function Dashboard() {
           color="green"
           sub="Estado activo"
           onClick={() => navigate('/proveedores')}
+        />
+
+        <StatCard
+          title="Cupones Activos"
+          value={cuponesActivos}
+          icon="🏷️"
+          color="purple"
+          sub="Vigentes para uso"
+          onClick={() => navigate('/cupones')}
+        />
+
+        <StatCard
+          title="Notificaciones Fallidas"
+          value={notificacionesFallidas}
+          icon="🔔"
+          color="red"
+          sub="Requieren reenvío"
+          onClick={() => navigate('/notificaciones')}
         />
 
       </div>

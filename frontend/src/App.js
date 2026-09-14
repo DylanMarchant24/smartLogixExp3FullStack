@@ -11,6 +11,9 @@ import Pagos from './pages/Pagos';
 import Sucursales from './pages/Sucursales';
 import Usuarios from './pages/Usuarios';
 import Proveedores from './pages/Proveedores';
+import Calificaciones from './pages/Calificaciones';
+import Cupones from './pages/Cupones';
+import Notificaciones from './pages/Notificaciones';
 
 /**
  * App – Raíz de la aplicación.
@@ -40,6 +43,9 @@ function App() {
           <Route path="sucursales" element={<Sucursales />} />
           <Route path="usuarios" element={<Usuarios />} />
           <Route path="proveedores" element={<Proveedores />} />
+          <Route path="calificaciones" element={<Calificaciones />} />
+          <Route path="cupones" element={<Cupones />} />
+          <Route path="notificaciones" element={<Notificaciones />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>

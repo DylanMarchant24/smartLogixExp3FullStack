@@ -12,6 +12,9 @@ const NAV = [
   { to: '/sucursales', icon: '🏪', label: 'Sucursales' },
   { to: '/usuarios', icon: '👥', label: 'Usuarios' },
   { to: '/proveedores', icon: '🤝', label: 'Proveedores' },
+  { to: '/calificaciones', icon: '⭐', label: 'Calificaciones' },
+  { to: '/cupones', icon: '🏷️', label: 'Cupones' },
+  { to: '/notificaciones', icon: '🔔', label: 'Notificaciones' },
 ];
 
 function Layout() {
