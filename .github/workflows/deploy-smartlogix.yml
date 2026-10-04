@@ -58,6 +58,14 @@ jobs:
           frontend_url         = "${{ vars.FRONTEND_URL }}"
           EOF
 
+      - name: Restaurar estado de Terraform (tfstate)
+        uses: actions/cache/restore@v4
+        with:
+          path: terraform/terraform.tfstate
+          key: terraform-state-${{ github.run_id }}
+          restore-keys: |
+            terraform-state-
+
       - name: Terraform Init
         run: terraform init
 
@@ -71,6 +79,21 @@ jobs:
       - name: Terraform Apply
         if: env.TF_ACTION == 'apply'
         run: terraform apply -auto-approve tfplan
+
+      - name: Guardar estado de Terraform (tfstate)
+        uses: actions/cache/save@v4
+        if: always() && env.TF_ACTION == 'apply' && hashFiles('terraform/terraform.tfstate') != ''
+        with:
+          path: terraform/terraform.tfstate
+          key: terraform-state-${{ github.run_id }}
+
+      - name: Subir tfstate como artefacto de respaldo
+        uses: actions/upload-artifact@v4
+        if: always() && hashFiles('terraform/terraform.tfstate') != ''
+        with:
+          name: terraform-state
+          path: terraform/terraform.tfstate
+          retention-days: 14
 
       - name: Mostrar outputs (IP, URLs del BFF y Eureka)
         if: env.TF_ACTION == 'apply'

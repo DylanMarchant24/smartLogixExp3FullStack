@@ -19,8 +19,8 @@ ENV REACT_APP_AZURE_TENANT_ID=$REACT_APP_AZURE_TENANT_ID
 ENV REACT_APP_AZURE_REDIRECT_URI=$REACT_APP_AZURE_REDIRECT_URI
 ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
 
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json package-lock.json* ./
+RUN npm ci || npm install
 
 COPY . .
 RUN npm run build
