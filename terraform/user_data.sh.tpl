@@ -24,9 +24,9 @@ systemctl enable docker
 systemctl start docker
 usermod -aG docker ubuntu
 
-# ── 2. Clonar el repositorio (rama feature/bmdev) ─────────────────────
+# ── 2. Clonar el repositorio (rama develop) ───────────────────────────
 cd /home/ubuntu
-sudo -u ubuntu git clone -b feature/bmdev https://github.com/DylanMarchant24/smartLogixExp3FullStack.git
+sudo -u ubuntu git clone -b develop https://github.com/DylanMarchant24/smartLogixExp3FullStack.git
 cd smartLogixExp3FullStack
 
 # ── 3. Crear el .env con los valores inyectados por Terraform ─────────
@@ -35,6 +35,8 @@ MYSQL_ROOT_PASSWORD=${mysql_root_password}
 AZURE_CLIENT_ID=${azure_client_id}
 AZURE_TENANT_ID=${azure_tenant_id}
 FRONTEND_URL=${frontend_url}
+RABBITMQ_DEFAULT_USER=smartlogix
+RABBITMQ_DEFAULT_PASS=smartlogix123
 EOF
 chown ubuntu:ubuntu .env
 chmod 600 .env

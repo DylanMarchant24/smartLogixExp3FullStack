@@ -16,14 +16,9 @@ variable "ssh_cidr" {
 }
 
 variable "key_pair_name" {
-  description = "Nombre del key pair en AWS"
+  description = "Nombre del key pair en AWS (en AWS Academy se usa por defecto vockey)"
   type        = string
-  default     = "smartlogix-key"
-}
-
-variable "public_key" {
-  description = "Contenido de la llave pública SSH (no la ruta, el contenido del .pub)"
-  type        = string
+  default     = "vockey"
 }
 
 variable "mysql_root_password" {
