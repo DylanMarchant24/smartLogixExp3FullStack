@@ -39,9 +39,13 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_security_group" "smartlogix_sg" {
-  name        = "smartlogix-sg"
+  name_prefix = "smartlogix-sg-"
   description = "SmartLogix - reglas de acceso backend (Docker)"
   vpc_id      = data.aws_vpc.default.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   ingress {
     description = "SSH"

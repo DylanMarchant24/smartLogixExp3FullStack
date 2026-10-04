@@ -30,11 +30,23 @@ sudo -u ubuntu git clone -b develop https://github.com/DylanMarchant24/smartLogi
 cd smartLogixExp3FullStack
 
 # ── 3. Crear el .env con los valores inyectados por Terraform ─────────
+# Obtener IP pública dinámica de la instancia en AWS
+TOKEN=$(curl -s -m 5 -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60" || true)
+PUBLIC_IP=""
+if [ -n "$TOKEN" ]; then
+  PUBLIC_IP=$(curl -s -m 5 -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+fi
+if [ -z "$PUBLIC_IP" ]; then
+  PUBLIC_IP=$(curl -s -m 5 ifconfig.me || curl -s -m 5 icanhazip.com || echo "localhost")
+fi
+echo "IP publica detectada: $PUBLIC_IP"
+
 cat > .env <<EOF
 MYSQL_ROOT_PASSWORD=${mysql_root_password}
 AZURE_CLIENT_ID=${azure_client_id}
 AZURE_TENANT_ID=${azure_tenant_id}
-FRONTEND_URL=${frontend_url}
+FRONTEND_URL=http://$PUBLIC_IP:3000
+API_BASE_URL=http://$PUBLIC_IP:8080
 RABBITMQ_DEFAULT_USER=smartlogix
 RABBITMQ_DEFAULT_PASS=smartlogix123
 EOF
