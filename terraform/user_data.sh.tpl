@@ -72,6 +72,10 @@ if [ -n "${ngrok_authtoken}" ]; then
   apt-get update -y
   apt-get install -y ngrok
 
+  # Asegurar enlace simbolico en /usr/bin/ngrok
+  NGROK_PATH=$(which ngrok || echo "/usr/local/bin/ngrok")
+  ln -sf "$NGROK_PATH" /usr/bin/ngrok
+
   # Configurar authtoken para el usuario ubuntu
   sudo -u ubuntu ngrok config add-authtoken ${ngrok_authtoken}
 
@@ -84,7 +88,7 @@ After=network.target docker.service
 [Service]
 Type=simple
 User=ubuntu
-ExecStart=/usr/bin/ngrok http --domain=${ngrok_domain} 3000
+ExecStart=/usr/bin/ngrok http --url=${ngrok_domain} 3000
 Restart=always
 RestartSec=10
 
