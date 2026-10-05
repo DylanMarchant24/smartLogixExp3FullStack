@@ -6,7 +6,7 @@ import { PublicClientApplication, LogLevel } from '@azure/msal-browser';
  */
 const clientId = process.env.REACT_APP_AZURE_CLIENT_ID || '00000000-0000-0000-0000-000000000000';
 const tenantId = process.env.REACT_APP_AZURE_TENANT_ID || 'common';
-const redirectUri = process.env.REACT_APP_AZURE_REDIRECT_URI || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+const redirectUri = (typeof window !== 'undefined') ? window.location.origin : (process.env.REACT_APP_AZURE_REDIRECT_URI || 'http://localhost:3000');
 
 export const msalConfig = {
   auth: {
