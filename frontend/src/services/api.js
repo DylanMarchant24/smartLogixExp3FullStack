@@ -8,8 +8,10 @@ import { msalInstance, loginRequest } from '../config/msalConfig';
  * Adquiere tokens OIDC de Azure MSAL automáticamente para cada petición.
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8080';
-const BASE = API_BASE_URL.replace(/\/$/, '') + (API_BASE_URL.includes('/api/bff') ? '' : '/api/bff');
+const API_BASE_URL = (typeof window !== 'undefined' && window.location.protocol === 'https:')
+  ? ''
+  : (process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8080');
+const BASE = API_BASE_URL ? (API_BASE_URL.replace(/\/$/, '') + (API_BASE_URL.includes('/api/bff') ? '' : '/api/bff')) : '/api/bff';
 
 const AUTH_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/auth`;
 const PAGOS_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/pagos`;
