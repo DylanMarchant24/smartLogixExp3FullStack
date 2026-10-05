@@ -5,6 +5,7 @@ import cl.duocuc.smartlogix.pedidos.factory.PedidoFactory;
 import cl.duocuc.smartlogix.pedidos.model.EstadoPedido;
 import cl.duocuc.smartlogix.pedidos.model.Pedido;
 import cl.duocuc.smartlogix.pedidos.repository.PedidoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,7 @@ public class PedidoService {
     /** Tiempo de espera antes de intentar cerrar el circuito (30 s) */
     private static final long RESET_MS = 30_000L;
 
+    @Autowired
     public PedidoService(PedidoRepository pedidoRepository, RestTemplate restTemplate, PedidoEventPublisher pedidoEventPublisher) {
         this.pedidoRepository = pedidoRepository;
         this.restTemplate     = restTemplate;
