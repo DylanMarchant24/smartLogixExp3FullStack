@@ -44,3 +44,16 @@ variable "frontend_url" {
   type        = string
   default     = "http://localhost:3000"
 }
+
+variable "ngrok_authtoken" {
+  description = "Authtoken de ngrok para exponer el frontend con HTTPS público"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "ngrok_domain" {
+  description = "Dominio estático de ngrok asignado a tu cuenta"
+  type        = string
+  default     = "citric-proactive-rounding.ngrok-free.dev"
+}

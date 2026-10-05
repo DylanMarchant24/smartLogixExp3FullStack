@@ -56,6 +56,8 @@ jobs:
           azure_client_id      = "${{ secrets.AZURE_CLIENT_ID }}"
           azure_tenant_id      = "${{ secrets.AZURE_TENANT_ID }}"
           frontend_url         = "${{ vars.FRONTEND_URL }}"
+          ngrok_authtoken      = "${{ secrets.NGROK_AUTHTOKEN }}"
+          ngrok_domain         = "citric-proactive-rounding.ngrok-free.dev"
           EOF
 
       - name: Restaurar estado de Terraform (tfstate)

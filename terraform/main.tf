@@ -132,6 +132,8 @@ resource "aws_instance" "backend" {
     azure_client_id     = var.azure_client_id
     azure_tenant_id     = var.azure_tenant_id
     frontend_url        = var.frontend_url
+    ngrok_authtoken     = var.ngrok_authtoken
+    ngrok_domain        = var.ngrok_domain
   })
 
   tags = {

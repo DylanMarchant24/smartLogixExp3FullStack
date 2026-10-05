@@ -17,3 +17,8 @@ output "ssh_command" {
 output "rabbitmq_url" {
   value = "http://${aws_eip.backend_eip.public_ip}:15672"
 }
+
+output "frontend_url" {
+  description = "URL publica segura HTTPS del frontend mediante ngrok"
+  value       = "https://${var.ngrok_domain}"
+}
