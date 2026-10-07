@@ -8,42 +8,44 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Configuración de infraestructura RabbitMQ para ms-notificaciones:
- * - EXCHANGE: TopicExchange ('smartlogix.exchange').
- * - QUEUE: Cola durable 'smartlogix.notificaciones.queue'.
- * - BINDING: Conecta la cola al TopicExchange con routing key 'pedido.*'.
- */
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String EXCHANGE_NAME = "smartlogix.exchange";
-    public static final String QUEUE_NOTIFICACIONES = "smartlogix.notificaciones.queue";
-    public static final String ROUTING_KEY_PEDIDO_PATTERN = "pedido.*";
+    // 1. INYECTAMOS LAS VARIABLES CENTRALIZADAS
+    @Value("${mensajeria.exchange.pedidos:smartlogix.exchange}")
+    private String exchangeName;
+
+    @Value("${mensajeria.colas.notificaciones:smartlogix.notificaciones.queue}")
+    private String queueNotificaciones;
+
+    @Value("${mensajeria.routing-keys.notificaciones:pedido.*}")
+    private String routingKeyPedidoPattern;
 
     @Bean
     public TopicExchange smartlogixExchange() {
-        return new TopicExchange(EXCHANGE_NAME, true, false);
+        return new TopicExchange(exchangeName, true, false);
     }
 
     @Bean
     public Queue notificacionesQueue() {
-        return QueueBuilder.durable(QUEUE_NOTIFICACIONES).build();
+        return QueueBuilder.durable(queueNotificaciones).build();
     }
 
     @Bean
     public Binding bindingNotificaciones(Queue notificacionesQueue, TopicExchange smartlogixExchange) {
         return BindingBuilder.bind(notificacionesQueue)
                 .to(smartlogixExchange)
-                .with(ROUTING_KEY_PEDIDO_PATTERN);
+                .with(routingKeyPedidoPattern);
     }
 
+    // 2. MANTENEMOS INTACTA LA LÓGICA DE CONVERSIÓN DE DYLAN
     @Bean
     public MessageConverter jsonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
