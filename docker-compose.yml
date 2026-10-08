@@ -47,6 +47,31 @@ services:
     networks:
       - smartlogix-net
 
+  ms-rabbit-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: ms-rabbit-admin
+    container_name: smartlogix-ms-rabbit-admin
+    restart: unless-stopped
+    depends_on:
+      discovery-server:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-smartlogix}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-smartlogix123}
+      SERVER_PORT: 8093
+    ports:
+      - "8093:8093"
+    networks:
+      - smartlogix-net
+      
   discovery-server:
     build:
       context: .
