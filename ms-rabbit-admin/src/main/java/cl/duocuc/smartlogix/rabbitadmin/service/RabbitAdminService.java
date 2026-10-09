@@ -26,11 +26,37 @@ public class RabbitAdminService {
     }
 
     public void createQueue(CreateQueueRequest request) {
-        Queue queue = QueueBuilder.durable(request.getName())
-                .exclusive(request.isExclusive())
-                .autoDelete(request.isAutoDelete())
-                .withArguments(defaultArguments(request.getArguments()))
-                .build();
+
+        Queue queue;
+
+        if (request.isExclusive() && request.isAutoDelete()) {
+            queue = QueueBuilder
+                    .durable(request.getName())
+                    .exclusive()
+                    .autoDelete()
+                    .withArguments(defaultArguments(request.getArguments()))
+                    .build();
+
+        } else if (request.isExclusive()) {
+            queue = QueueBuilder
+                    .durable(request.getName())
+                    .exclusive()
+                    .withArguments(defaultArguments(request.getArguments()))
+                    .build();
+
+        } else if (request.isAutoDelete()) {
+            queue = QueueBuilder
+                    .durable(request.getName())
+                    .autoDelete()
+                    .withArguments(defaultArguments(request.getArguments()))
+                    .build();
+
+        } else {
+            queue = QueueBuilder
+                    .durable(request.getName())
+                    .withArguments(defaultArguments(request.getArguments()))
+                    .build();
+        }
 
         rabbitAdmin.declareQueue(queue);
     }

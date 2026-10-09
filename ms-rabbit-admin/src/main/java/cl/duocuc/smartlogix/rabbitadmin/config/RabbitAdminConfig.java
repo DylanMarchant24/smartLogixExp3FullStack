@@ -1,6 +1,5 @@
 package cl.duocuc.smartlogix.rabbitadmin.config;
 
-import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +8,9 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitAdminConfig {
 
     @Bean
-    public AmqpAdmin rabbitAdmin(org.springframework.amqp.rabbit.connection.ConnectionFactory connectionFactory) {
+    public RabbitAdmin rabbitAdmin(
+            org.springframework.amqp.rabbit.connection.ConnectionFactory connectionFactory) {
+
         return new RabbitAdmin(connectionFactory);
     }
 }
