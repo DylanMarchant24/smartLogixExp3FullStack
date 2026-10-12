@@ -1,18 +1,22 @@
 package cl.duocuc.smartlogix.notificaciones.consumer;
 
 import cl.duocuc.smartlogix.notificaciones.config.RabbitMQConfig;
+import cl.duocuc.smartlogix.notificaciones.config.RabbitMQDlqConfig;
 import cl.duocuc.smartlogix.notificaciones.dto.NotificacionRequestDTO;
 import cl.duocuc.smartlogix.notificaciones.event.PedidoEvent;
 import cl.duocuc.smartlogix.notificaciones.model.TipoNotificacion;
 import cl.duocuc.smartlogix.notificaciones.service.NotificacionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 /**
  * Consumidor RabbitMQ de eventos de pedidos en ms-notificaciones.
  * Escucha la cola 'smartlogix.notificaciones.queue' vinculada al TopicExchange con routing key 'pedido.*'.
+ * Si el procesamiento falla, el mensaje se rechaza sin reencolar (requeue=false) y RabbitMQ lo
+ * enruta al DLX/DLQ configurado en RabbitMQDlqConfig.
  */
 @Slf4j
 @Component
@@ -52,6 +56,9 @@ public class PedidoNotificacionListener {
             log.info("[RabbitMQ Consumer - ms-notificaciones] Notificación registrada y enviada exitosamente para pedido #{}", event.getPedidoId());
         } catch (Exception e) {
             log.error("[RabbitMQ Consumer - ms-notificaciones] Error al procesar notificación de evento: {}", e.getMessage(), e);
+            log.warn("[RabbitMQ DLQ - ms-notificaciones] Mensaje rechazado sin reencolar. Se enviará al DLX '{}' -> DLQ '{}'. Evento: {}",
+                    RabbitMQDlqConfig.DLX_NAME, RabbitMQDlqConfig.DLQ_NOTIFICACIONES, event);
+            throw new AmqpRejectAndDontRequeueException("Fallo al procesar evento de pedido", e);
         }
     }
 }
