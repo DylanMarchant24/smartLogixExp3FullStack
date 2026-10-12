@@ -1,5 +1,6 @@
 package cl.duocuc.smartlogix.notificaciones.consumer;
 
+import cl.duocuc.smartlogix.notificaciones.config.RabbitMQDlqConfig;
 import cl.duocuc.smartlogix.notificaciones.dto.NotificacionRequestDTO;
 import cl.duocuc.smartlogix.notificaciones.event.PedidoEvent;
 import cl.duocuc.smartlogix.notificaciones.model.TipoNotificacion;
@@ -17,6 +18,8 @@ import java.io.IOException;
 /**
  * Consumidor RabbitMQ de eventos de pedidos en ms-notificaciones.
  * Escucha la cola centralizada configurada en properties.
+ * En caso de error, rechaza el mensaje sin reencolar (basicNack requeue=false)
+ * para que RabbitMQ lo envíe automáticamente a la Dead Letter Queue (DLQ).
  */
 @Slf4j
 @Component
@@ -25,8 +28,7 @@ public class PedidoNotificacionListener {
 
     private final NotificacionService notificacionService;
 
-    // 1. Usamos la variable inyectada del properties (eliminamos la referencia estática)
-    @RabbitListener(queues = "${mensajeria.colas.notificaciones}")
+    @RabbitListener(queues = "${mensajeria.colas.notificaciones:smartlogix.notificaciones.queue}")
     public void recibirEventoPedido(
             PedidoEvent event,
             Channel channel,
@@ -35,7 +37,6 @@ public class PedidoNotificacionListener {
         log.info("[RabbitMQ Consumer - ms-notificaciones] Evento recibido: {}", event);
 
         try {
-            // Mantenemos la lógica de negocio intacta que hizo Dylan
             String destinatario = (event.getClienteEmail() != null && !event.getClienteEmail().isBlank())
                     ? event.getClienteEmail()
                     : "cliente@smartlogix.cl";
@@ -60,13 +61,15 @@ public class PedidoNotificacionListener {
             notificacionService.crearYEnviar(request);
             log.info("[RabbitMQ Consumer - ms-notificaciones] Notificación registrada y enviada exitosamente para pedido #{}", event.getPedidoId());
 
-            // 2. Confirmación manual (ACK) indicando que todo salió bien
+            // Confirmación manual (ACK) indicando procesamiento exitoso
             channel.basicAck(deliveryTag, false);
 
         } catch (Exception e) {
             log.error("[RabbitMQ Consumer - ms-notificaciones] Error al procesar notificación de evento: {}", e.getMessage(), e);
+            log.warn("[RabbitMQ DLQ - ms-notificaciones] Mensaje rechazado sin reencolar. Se enviará al DLX '{}' -> DLQ '{}'. Evento: {}",
+                    RabbitMQDlqConfig.DLX_NAME, RabbitMQDlqConfig.DLQ_NOTIFICACIONES, event);
 
-            // 3. Rechazo manual (NACK) con requeue=false para mandarlo a la DLQ (Dead Letter Queue)
+            // Rechazo manual (NACK) con requeue=false para mandarlo a la DLQ (Dead Letter Queue)
             channel.basicNack(deliveryTag, false, false);
         }
     }
