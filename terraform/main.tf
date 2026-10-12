@@ -80,9 +80,9 @@ resource "aws_security_group" "smartlogix_sg" {
   }
 
   ingress {
-    description = "Microservicios internos (debug opcional)"
+    description = "Microservicios internos (debug opcional y ms-rabbit-admin)"
     from_port   = 8081
-    to_port     = 8092
+    to_port     = 8093
     protocol    = "tcp"
     cidr_blocks = [var.ssh_cidr]
   }
