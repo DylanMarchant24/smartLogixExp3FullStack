@@ -97,7 +97,7 @@ jobs:
           path: terraform/terraform.tfstate
           retention-days: 14
 
-      - name: Mostrar outputs (IP, URLs del BFF y Eureka)
+      - name: Mostrar outputs (IP, URLs del BFF, Eureka, RabbitMQ y Swagger)
         if: env.TF_ACTION == 'apply'
         run: terraform output
 

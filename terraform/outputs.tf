@@ -22,3 +22,8 @@ output "frontend_url" {
   description = "URL publica segura HTTPS del frontend mediante ngrok"
   value       = "https://${var.ngrok_domain}"
 }
+
+output "swagger_rabbit_admin_url" {
+  description = "URL interactiva de Swagger UI para probar y administrar RabbitMQ (ms-rabbit-admin)"
+  value       = "http://${aws_eip.backend_eip.public_ip}:8093/swagger-ui/index.html"
+}
