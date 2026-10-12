@@ -1,0 +1,41 @@
+{
+  "info": {
+    "name": "SmartLogix - RabbitMQ DLQ y Seguridad",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "bff_url", "value": "http://localhost:8080" },
+    { "key": "pedidos_path", "value": "/api/pedidos" },
+    { "key": "jwt", "value": "PEGAR_TOKEN_AZURE_AQUI" },
+    { "key": "rabbit_url", "value": "http://localhost:15672" },
+    { "key": "rabbit_user", "value": "smartlogix" },
+    { "key": "rabbit_pass", "value": "smartlogix123" }
+  ],
+  "item": [
+    {
+      "name": "Seguridad - sin token (espera 401)",
+      "request": { "method": "GET", "url": "{{bff_url}}{{pedidos_path}}" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Sin token responde 401', function () { pm.response.to.have.status(401); });"] } }]
+    },
+    {
+      "name": "Seguridad - token invalido (espera 401)",
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer token.invalido.123" }], "url": "{{bff_url}}{{pedidos_path}}" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Token invalido responde 401', function () { pm.response.to.have.status(401); });"] } }]
+    },
+    {
+      "name": "Seguridad - token valido (espera 200)",
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{jwt}}" }], "url": "{{bff_url}}{{pedidos_path}}" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Token valido responde 200', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "RabbitMQ - estado cola principal",
+      "request": { "method": "GET", "auth": { "type": "basic", "basic": [{ "key": "username", "value": "{{rabbit_user}}" }, { "key": "password", "value": "{{rabbit_pass}}" }] }, "url": "{{rabbit_url}}/api/queues/%2F/smartlogix.notificaciones.queue" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Cola principal tiene DLX', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().arguments['x-dead-letter-exchange']).to.eql('smartlogix.dlx'); });"] } }]
+    },
+    {
+      "name": "RabbitMQ - estado DLQ",
+      "request": { "method": "GET", "auth": { "type": "basic", "basic": [{ "key": "username", "value": "{{rabbit_user}}" }, { "key": "password", "value": "{{rabbit_pass}}" }] }, "url": "{{rabbit_url}}/api/queues/%2F/smartlogix.notificaciones.dlq" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('DLQ existe', function () { pm.response.to.have.status(200); });", "console.log('Mensajes en DLQ: ' + pm.response.json().messages);"] } }]
+    }
+  ]
+}
