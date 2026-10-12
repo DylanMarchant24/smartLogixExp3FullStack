@@ -1,0 +1,61 @@
+{
+  "info": {
+    "name": "SmartLogix - RabbitMQ DLQ y Seguridad",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "bff_url", "value": "http://localhost:8080" },
+    { "key": "jwt", "value": "PEGAR_TOKEN_AZURE_AQUI" },
+    { "key": "sku", "value": "REEMPLAZAR_POR_SKU_EXISTENTE_EN_INVENTARIO" },
+    { "key": "rabbit_url", "value": "http://localhost:15672" },
+    { "key": "rabbit_user", "value": "smartlogix" },
+    { "key": "rabbit_pass", "value": "smartlogix123" }
+  ],
+  "item": [
+    {
+      "name": "Publico - GET pedidos sin token (espera 200)",
+      "request": { "method": "GET", "url": "{{bff_url}}/api/bff/pedidos" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('GET es publico y responde 200', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "Seguridad - POST pedido sin token (espera 401)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"skuProducto\": \"{{sku}}\", \"cantidad\": 1, \"clienteEmail\": \"cliente@test.cl\"}" },
+        "url": "{{bff_url}}/api/bff/pedidos"
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Sin token responde 401', function () { pm.response.to.have.status(401); });"] } }]
+    },
+    {
+      "name": "Seguridad - POST pedido con token invalido (espera 401)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer token.invalido.123" }],
+        "body": { "mode": "raw", "raw": "{\"skuProducto\": \"{{sku}}\", \"cantidad\": 1, \"clienteEmail\": \"cliente@test.cl\"}" },
+        "url": "{{bff_url}}/api/bff/pedidos"
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Token invalido responde 401', function () { pm.response.to.have.status(401); });"] } }]
+    },
+    {
+      "name": "Seguridad - POST pedido con token valido (espera 201)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" }],
+        "body": { "mode": "raw", "raw": "{\"skuProducto\": \"{{sku}}\", \"cantidad\": 1, \"clienteEmail\": \"cliente@test.cl\"}" },
+        "url": "{{bff_url}}/api/bff/pedidos"
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Token valido crea el pedido (201)', function () { pm.response.to.have.status(201); });"] } }]
+    },
+    {
+      "name": "RabbitMQ - estado cola principal",
+      "request": { "method": "GET", "auth": { "type": "basic", "basic": [{ "key": "username", "value": "{{rabbit_user}}" }, { "key": "password", "value": "{{rabbit_pass}}" }] }, "url": "{{rabbit_url}}/api/queues/%2F/smartlogix.notificaciones.queue" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Cola principal tiene DLX', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().arguments['x-dead-letter-exchange']).to.eql('smartlogix.dlx'); });"] } }]
+    },
+    {
+      "name": "RabbitMQ - estado DLQ",
+      "request": { "method": "GET", "auth": { "type": "basic", "basic": [{ "key": "username", "value": "{{rabbit_user}}" }, { "key": "password", "value": "{{rabbit_pass}}" }] }, "url": "{{rabbit_url}}/api/queues/%2F/smartlogix.notificaciones.dlq" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('DLQ existe', function () { pm.response.to.have.status(200); });", "console.log('Mensajes en DLQ: ' + pm.response.json().messages);"] } }]
+    }
+  ]
+}

@@ -11,5 +11,9 @@ output "eureka_url" {
 }
 
 output "ssh_command" {
-  value = "ssh -i smartlogix-key ubuntu@${aws_eip.backend_eip.public_ip}"
+  value = "ssh -i labsuser.pem ubuntu@${aws_eip.backend_eip.public_ip}"
+}
+
+output "rabbitmq_url" {
+  value = "http://${aws_eip.backend_eip.public_ip}:15672"
 }

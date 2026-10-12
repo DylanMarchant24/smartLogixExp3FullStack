@@ -91,6 +91,14 @@ resource "aws_security_group" "smartlogix_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "RabbitMQ Management UI"
+    from_port   = 15672
+    to_port     = 15672
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_cidr]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -103,15 +111,10 @@ resource "aws_security_group" "smartlogix_sg" {
   }
 }
 
-resource "aws_key_pair" "smartlogix_key" {
-  key_name   = var.key_pair_name
-  public_key = var.public_key
-}
-
 resource "aws_instance" "backend" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
-  key_name               = aws_key_pair.smartlogix_key.key_name
+  key_name               = var.key_pair_name
   subnet_id              = data.aws_subnets.default.ids[0]
   vpc_security_group_ids = [aws_security_group.smartlogix_sg.id]
 

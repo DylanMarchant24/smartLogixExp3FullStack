@@ -29,6 +29,7 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final RestTemplate restTemplate;
+    private final PedidoEventPublisher pedidoEventPublisher;
 
     @Value("${inventario.url:http://localhost:8081}")
     private String inventarioUrl;
@@ -39,9 +40,14 @@ public class PedidoService {
     /** Tiempo de espera antes de intentar cerrar el circuito (30 s) */
     private static final long RESET_MS = 30_000L;
 
-    public PedidoService(PedidoRepository pedidoRepository, RestTemplate restTemplate) {
+    public PedidoService(PedidoRepository pedidoRepository, RestTemplate restTemplate, PedidoEventPublisher pedidoEventPublisher) {
         this.pedidoRepository = pedidoRepository;
         this.restTemplate     = restTemplate;
+        this.pedidoEventPublisher = pedidoEventPublisher;
+    }
+
+    public PedidoService(PedidoRepository pedidoRepository, RestTemplate restTemplate) {
+        this(pedidoRepository, restTemplate, null);
     }
 
     // ── Consultas ─────────────────────────────────────────────────────────────
@@ -75,6 +81,7 @@ public class PedidoService {
      *  2a. Si stock OK → Factory crea pedido APROBADO y descuenta stock.
      *  2b. Si circuit abierto → Factory crea pedido CREADO (fallback).
      *  2c. Si stock insuficiente → rechaza la solicitud.
+     *  3. Publica evento en RabbitMQ para notificaciones y envíos automáticos.
      */
     @Transactional
     public PedidoDTO crearPedido(PedidoDTO dto) {
@@ -96,7 +103,11 @@ public class PedidoService {
                     + ". Disponible: " + stock + " | Solicitado: " + dto.getCantidad());
         }
 
-        return toDTO(pedidoRepository.save(pedido));
+        PedidoDTO guardado = toDTO(pedidoRepository.save(pedido));
+        if (pedidoEventPublisher != null) {
+            pedidoEventPublisher.publicarPedidoCreado(guardado);
+        }
+        return guardado;
     }
 
     @Transactional
@@ -105,7 +116,11 @@ public class PedidoService {
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado: " + id));
         pedido.setEstado(nuevoEstado);
         pedido.setFechaActualizacion(LocalDateTime.now());
-        return toDTO(pedidoRepository.save(pedido));
+        PedidoDTO actualizado = toDTO(pedidoRepository.save(pedido));
+        if (pedidoEventPublisher != null) {
+            pedidoEventPublisher.publicarPedidoActualizado(actualizado);
+        }
+        return actualizado;
     }
 
     // ── Circuit Breaker ───────────────────────────────────────────────────────

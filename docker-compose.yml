@@ -1,7 +1,8 @@
 version: "3.9"
 
 # ==============================================================================
-# SmartLogix - Orquestación completa del backend con Docker Compose.
+# SmartLogix - Orquestacion completa: backend (13 microservicios + MySQL)
+# y frontend (React servido con Nginx).
 # Todas las variables sensibles/configurables se leen desde el archivo .env
 # (nunca se suben credenciales directamente en este archivo).
 # ==============================================================================
@@ -20,6 +21,26 @@ services:
       - mysql-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - smartlogix-net
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: smartlogix-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-smartlogix}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-smartlogix123}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -75,12 +96,18 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_pedidos?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
       INVENTARIO_URL: "http://ms-inventario:8081"
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-smartlogix}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-smartlogix123}
     ports:
       - "8082:8082"
     networks:
@@ -99,11 +126,17 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_envios?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_envios?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-smartlogix}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-smartlogix123}
     ports:
       - "8083:8083"
     networks:
@@ -214,11 +247,17 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smartlogix_notificaciones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-smartlogix}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-smartlogix123}
     ports:
       - "8090:8090"
     networks:
@@ -303,7 +342,7 @@ services:
       CUPONES_URL: "http://ms-cupones:8091"
       USUARIOS_URL: "http://ms-usuarios:8092"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0"
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES: "${AZURE_CLIENT_ID}"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES: "${AZURE_CLIENT_ID},65187167-4bfc-4ef5-a584-4654e7d0612d"
     ports:
       - "8080:8080"
     networks:
@@ -328,9 +367,29 @@ services:
     networks:
       - smartlogix-net
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+        REACT_APP_AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+        REACT_APP_AZURE_REDIRECT_URI: ${FRONTEND_URL}
+        REACT_APP_API_BASE_URL: ${API_BASE_URL:-http://52.201.81.129:8080}
+    container_name: smartlogix-frontend
+    restart: unless-stopped
+    depends_on:
+      - bff
+      - api-gateway
+    ports:
+      - "3000:3000"
+    networks:
+      - smartlogix-net
+
 networks:
   smartlogix-net:
     driver: bridge
 
 volumes:
   mysql-data:
+  rabbitmq-data:

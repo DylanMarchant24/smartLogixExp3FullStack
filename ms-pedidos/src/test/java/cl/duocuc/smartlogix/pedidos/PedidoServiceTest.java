@@ -27,6 +27,7 @@ class PedidoServiceTest {
 
     @Mock private PedidoRepository pedidoRepository;
     @Mock private RestTemplate restTemplate;
+    @Mock private cl.duocuc.smartlogix.pedidos.service.PedidoEventPublisher pedidoEventPublisher;
 
     @InjectMocks
     private PedidoService pedidoService;
