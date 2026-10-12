@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Configuración de infraestructura RabbitMQ para ms-notificaciones:
  * - EXCHANGE: TopicExchange ('smartlogix.exchange').
- * - QUEUE: Cola durable 'smartlogix.notificaciones.queue'.
+ * - QUEUE: Cola durable 'smartlogix.notificaciones.queue' (con DLX configurado, ver RabbitMQDlqConfig).
  * - BINDING: Conecta la cola al TopicExchange con routing key 'pedido.*'.
  */
 @Configuration
@@ -29,7 +29,10 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue notificacionesQueue() {
-        return QueueBuilder.durable(QUEUE_NOTIFICACIONES).build();
+        return QueueBuilder.durable(QUEUE_NOTIFICACIONES)
+                .deadLetterExchange(RabbitMQDlqConfig.DLX_NAME)
+                .deadLetterRoutingKey(RabbitMQDlqConfig.DLQ_ROUTING_KEY)
+                .build();
     }
 
     @Bean
