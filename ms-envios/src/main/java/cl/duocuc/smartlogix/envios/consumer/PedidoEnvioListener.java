@@ -8,14 +8,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 /**
  * Consumidor RabbitMQ en ms-envios.
- * Escucha la cola centralizada desde el properties para generar la orden de despacho.
+ * Escucha la cola centralizada en application.yml y mapea directamente el DTO PedidoEvent.
+ * Opera con acuse de recibo manual (basicAck / basicNack) para enviar fallos a la DLQ.
  */
 @Slf4j
 @Component
@@ -24,28 +27,29 @@ public class PedidoEnvioListener {
 
     private final EnvioService envioService;
 
-    // 1. Usamos la variable inyectada del properties para cumplir con la pauta
+    @Value("${mensajeria.exchange.dlx:smartlogix.dlx}")
+    private String dlxName = "smartlogix.dlx";
+
+    @Value("${mensajeria.colas.dlq-envios:smartlogix.envios.dlq}")
+    private String dlqEnvios = "smartlogix.envios.dlq";
+
     @RabbitListener(queues = "${mensajeria.colas.envios}")
     public void procesarPedidoCreado(
-            PedidoEvent event, 
-            Channel channel, 
+            @Payload PedidoEvent event,
+            Channel channel,
             @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
-        
+
         log.info("[RabbitMQ Consumer - ms-envios] Evento recibido: {}", event);
 
         try {
-            if (event.getPedidoId() == null) {
-                log.warn("[RabbitMQ Consumer - ms-envios] Evento ignorado: pedidoId es nulo");
-                // Confirmamos el mensaje (ACK) para sacarlo de la cola, ya que no nos sirve
-                channel.basicAck(deliveryTag, false);
-                return;
+            if (event == null || event.getPedidoId() == null) {
+                throw new IllegalArgumentException("Evento de pedido inválido: pedidoId es nulo");
             }
 
             // Evitar duplicar orden de envío si ya existe para este pedido
             var enviosExistentes = envioService.listarPorPedido(event.getPedidoId());
             if (!enviosExistentes.isEmpty()) {
                 log.info("[RabbitMQ Consumer - ms-envios] Ya existe envío registrado para el pedido #{}", event.getPedidoId());
-                // Confirmamos el mensaje (ACK) porque el flujo terminó correctamente
                 channel.basicAck(deliveryTag, false);
                 return;
             }
@@ -62,14 +66,13 @@ public class PedidoEnvioListener {
             log.info("[RabbitMQ Consumer - ms-envios] Envío automático creado con éxito. Tracking: {}, Pedido: {}",
                     creado.getCodigoSeguimiento(), creado.getPedidoId());
 
-            // 2. Confirmación manual (ACK) indicando éxito total en la lógica de negocio
             channel.basicAck(deliveryTag, false);
 
         } catch (Exception e) {
             log.error("[RabbitMQ Consumer - ms-envios] Error al generar envío automático para pedido: {}", e.getMessage(), e);
-            
-            // 3. Rechazo manual (NACK) con requeue=false para mandarlo a la DLQ.
-            // Esto es vital para que Benjamín pueda hacer su parte.
+            log.warn("[RabbitMQ DLQ - ms-envios] Mensaje rechazado sin reencolar (basicNack requeue=false). Se enviará al DLX '{}' -> DLQ '{}'. Evento: {}",
+                    dlxName, dlqEnvios, event);
+
             channel.basicNack(deliveryTag, false, false);
         }
     }

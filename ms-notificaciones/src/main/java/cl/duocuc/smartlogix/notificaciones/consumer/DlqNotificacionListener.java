@@ -1,35 +1,46 @@
 package cl.duocuc.smartlogix.notificaciones.consumer;
 
-import cl.duocuc.smartlogix.notificaciones.config.RabbitMQDlqConfig;
+import cl.duocuc.smartlogix.notificaciones.event.PedidoEvent;
+import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 
 /**
- * Registra en logs los mensajes muertos de 'smartlogix.notificaciones.dlq'.
- *
- * IMPORTANTE: este listener CONSUME (y confirma) los mensajes de la DLQ, por lo que la cola
- * queda vacia. Por eso esta desactivado por defecto; se activa con:
- *   smartlogix.dlq.logger.enabled=true
- * Mientras este desactivado, los mensajes permanecen en la DLQ para inspeccionarlos en el dashboard.
+ * Consumidor de auditoría para la Dead Letter Queue (DLQ) de ms-notificaciones.
+ * Escucha la cola definida en application.yml y mapea directamente el DTO PedidoEvent
+ * con confirmación manual (basicAck).
  */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "smartlogix.dlq.logger.enabled", havingValue = "true")
 public class DlqNotificacionListener {
 
-    @RabbitListener(queues = RabbitMQDlqConfig.DLQ_NOTIFICACIONES)
-    public void registrarMensajeMuerto(Message message) {
-        Object razon = message.getMessageProperties().getHeaders().get("x-first-death-reason");
-        Object colaOrigen = message.getMessageProperties().getHeaders().get("x-first-death-queue");
-        String cuerpo = new String(message.getBody(), StandardCharsets.UTF_8);
+    @Value("${mensajeria.colas.dlq-notificaciones}")
+    private String dlqNotificaciones;
 
-        log.warn("[RabbitMQ DLQ - ms-notificaciones] Mensaje muerto recibido en '{}'. colaOrigen={}, razon={}, xDeath={}, cuerpo={}",
-                RabbitMQDlqConfig.DLQ_NOTIFICACIONES, colaOrigen, razon,
-                message.getMessageProperties().getXDeathHeader(), cuerpo);
+    @RabbitListener(queues = "${mensajeria.colas.dlq-notificaciones}")
+    public void registrarMensajeMuerto(
+            @Payload PedidoEvent event,
+            Channel channel,
+            @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag,
+            @Header(name = "x-first-death-reason", required = false) String razon,
+            @Header(name = "x-first-death-queue", required = false) String colaOrigen) throws IOException {
+
+        try {
+            log.warn("[RabbitMQ DLQ - ms-notificaciones] Evento muerto recibido en '{}'. colaOrigen={}, razon={}, evento={}",
+                    dlqNotificaciones, colaOrigen, razon, event);
+            channel.basicAck(deliveryTag, false);
+        } catch (Exception e) {
+            log.error("[RabbitMQ DLQ - ms-notificaciones] Error al auditar mensaje en DLQ: {}", e.getMessage(), e);
+            channel.basicNack(deliveryTag, false, false);
+        }
     }
 }

@@ -19,6 +19,21 @@ public class CreateQueueRequest {
     private boolean durable = true;
     private boolean exclusive = false;
     private boolean autoDelete = false;
+
+    @Size(max = 255, message = "El nombre del Dead Letter Exchange no puede superar 255 caracteres")
+    @Pattern(
+        regexp = "^$|^[a-zA-Z0-9._:-]+$",
+        message = "El Dead Letter Exchange solo puede contener letras, números, '.', '_', ':' y '-'"
+    )
+    private String deadLetterExchange;
+
+    @Size(max = 255, message = "La Dead Letter Routing Key no puede superar 255 caracteres")
+    @Pattern(
+        regexp = "^$|^[a-zA-Z0-9._:#*-]+$",
+        message = "La Dead Letter Routing Key contiene caracteres no permitidos por RabbitMQ"
+    )
+    private String deadLetterRoutingKey;
+
     private Map<String, Object> arguments;
 
     public String getName() { return name; }
@@ -29,6 +44,10 @@ public class CreateQueueRequest {
     public void setExclusive(boolean exclusive) { this.exclusive = exclusive; }
     public boolean isAutoDelete() { return autoDelete; }
     public void setAutoDelete(boolean autoDelete) { this.autoDelete = autoDelete; }
+    public String getDeadLetterExchange() { return deadLetterExchange; }
+    public void setDeadLetterExchange(String deadLetterExchange) { this.deadLetterExchange = deadLetterExchange; }
+    public String getDeadLetterRoutingKey() { return deadLetterRoutingKey; }
+    public void setDeadLetterRoutingKey(String deadLetterRoutingKey) { this.deadLetterRoutingKey = deadLetterRoutingKey; }
     public Map<String, Object> getArguments() { return arguments; }
     public void setArguments(Map<String, Object> arguments) { this.arguments = arguments; }
 }

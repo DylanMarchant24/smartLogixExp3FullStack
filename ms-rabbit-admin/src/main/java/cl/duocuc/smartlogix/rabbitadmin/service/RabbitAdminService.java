@@ -7,57 +7,62 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Exchange;
 import org.springframework.amqp.core.FanoutExchange;
+import org.springframework.amqp.core.HeadersExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.core.HeadersExchange;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class RabbitAdminService {
 
     private final RabbitAdmin rabbitAdmin;
 
+    @Value("${mensajeria.exchange.dlx:smartlogix.dlx}")
+    private String defaultDlxExchange = "smartlogix.dlx";
+
     public RabbitAdminService(RabbitAdmin rabbitAdmin) {
         this.rabbitAdmin = rabbitAdmin;
     }
 
     public void createQueue(CreateQueueRequest request) {
+        QueueBuilder builder = request.isDurable()
+                ? QueueBuilder.durable(request.getName())
+                : QueueBuilder.nonDurable(request.getName());
 
-        Queue queue;
-
-        if (request.isExclusive() && request.isAutoDelete()) {
-            queue = QueueBuilder
-                    .durable(request.getName())
-                    .exclusive()
-                    .autoDelete()
-                    .withArguments(defaultArguments(request.getArguments()))
-                    .build();
-
-        } else if (request.isExclusive()) {
-            queue = QueueBuilder
-                    .durable(request.getName())
-                    .exclusive()
-                    .withArguments(defaultArguments(request.getArguments()))
-                    .build();
-
-        } else if (request.isAutoDelete()) {
-            queue = QueueBuilder
-                    .durable(request.getName())
-                    .autoDelete()
-                    .withArguments(defaultArguments(request.getArguments()))
-                    .build();
-
-        } else {
-            queue = QueueBuilder
-                    .durable(request.getName())
-                    .withArguments(defaultArguments(request.getArguments()))
-                    .build();
+        if (request.isExclusive()) {
+            builder.exclusive();
+        }
+        if (request.isAutoDelete()) {
+            builder.autoDelete();
         }
 
+        Map<String, Object> args = new HashMap<>(defaultArguments(request.getArguments()));
+
+        // Incorporar argumentos avanzados de Dead Letter Exchange (DLX) para gestión de errores
+        String dlx = (request.getDeadLetterExchange() != null && !request.getDeadLetterExchange().isBlank())
+                ? request.getDeadLetterExchange()
+                : (String) args.getOrDefault("x-dead-letter-exchange", defaultDlxExchange);
+
+        if (dlx != null && !dlx.isBlank()) {
+            builder.deadLetterExchange(dlx);
+        }
+
+        if (request.getDeadLetterRoutingKey() != null && !request.getDeadLetterRoutingKey().isBlank()) {
+            builder.deadLetterRoutingKey(request.getDeadLetterRoutingKey());
+        }
+
+        if (!args.isEmpty()) {
+            builder.withArguments(args);
+        }
+
+        Queue queue = builder.build();
         rabbitAdmin.declareQueue(queue);
     }
 
@@ -132,7 +137,7 @@ public class RabbitAdminService {
         };
     }
 
-    private java.util.Map<String, Object> defaultArguments(java.util.Map<String, Object> arguments) {
+    private Map<String, Object> defaultArguments(Map<String, Object> arguments) {
         return arguments == null ? Collections.emptyMap() : arguments;
     }
 }

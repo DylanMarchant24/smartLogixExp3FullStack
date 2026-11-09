@@ -16,27 +16,32 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Configuración de infraestructura RabbitMQ para ms-notificaciones:
- * - EXCHANGE: TopicExchange ('smartlogix.exchange').
- * - QUEUE: Cola durable 'smartlogix.notificaciones.queue' (con DLX configurado hacia RabbitMQDlqConfig).
- * - BINDING: Conecta la cola al TopicExchange con routing key 'pedido.*'.
+ * Configuración de infraestructura RabbitMQ para ms-notificaciones.
+ * Nombres de exchanges, colas y routing keys centralizados en application.yml.
+ * La cola principal declara argumentos avanzados de Dead Letter Exchange (DLX)
+ * y el contenedor de listeners opera con acuse de recibo manual (AcknowledgeMode.MANUAL).
  */
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String EXCHANGE_NAME = "smartlogix.exchange";
-    public static final String QUEUE_NOTIFICACIONES = "smartlogix.notificaciones.queue";
-    public static final String ROUTING_KEY_PEDIDO_PATTERN = "pedido.*";
+    public static final String DEFAULT_EXCHANGE_NAME = "smartlogix.exchange";
+    public static final String DEFAULT_QUEUE_NOTIFICACIONES = "smartlogix.notificaciones.queue";
+    public static final String DEFAULT_ROUTING_KEY_PATTERN = "pedido.*";
 
-    // 1. Inyectamos variables centralizadas desde application.properties (con valores por defecto)
-    @Value("${mensajeria.exchange.pedidos:smartlogix.exchange}")
-    private String exchangeName = EXCHANGE_NAME;
+    @Value("${mensajeria.exchange.pedidos:" + DEFAULT_EXCHANGE_NAME + "}")
+    private String exchangeName = DEFAULT_EXCHANGE_NAME;
 
-    @Value("${mensajeria.colas.notificaciones:smartlogix.notificaciones.queue}")
-    private String queueNotificaciones = QUEUE_NOTIFICACIONES;
+    @Value("${mensajeria.colas.notificaciones:" + DEFAULT_QUEUE_NOTIFICACIONES + "}")
+    private String queueNotificaciones = DEFAULT_QUEUE_NOTIFICACIONES;
 
-    @Value("${mensajeria.routing-keys.notificaciones:pedido.*}")
-    private String routingKeyPedidoPattern = ROUTING_KEY_PEDIDO_PATTERN;
+    @Value("${mensajeria.routing-keys.notificaciones:" + DEFAULT_ROUTING_KEY_PATTERN + "}")
+    private String routingKeyPedidoPattern = DEFAULT_ROUTING_KEY_PATTERN;
+
+    @Value("${mensajeria.exchange.dlx:" + RabbitMQDlqConfig.DEFAULT_DLX_NAME + "}")
+    private String dlxName = RabbitMQDlqConfig.DEFAULT_DLX_NAME;
+
+    @Value("${mensajeria.routing-keys.dlq-notificaciones:" + RabbitMQDlqConfig.DEFAULT_DLQ_ROUTING_KEY + "}")
+    private String dlqRoutingKey = RabbitMQDlqConfig.DEFAULT_DLQ_ROUTING_KEY;
 
     @Bean
     public TopicExchange smartlogixExchange() {
@@ -46,8 +51,8 @@ public class RabbitMQConfig {
     @Bean
     public Queue notificacionesQueue() {
         return QueueBuilder.durable(queueNotificaciones)
-                .deadLetterExchange(RabbitMQDlqConfig.DLX_NAME)
-                .deadLetterRoutingKey(RabbitMQDlqConfig.DLQ_ROUTING_KEY)
+                .deadLetterExchange(dlxName)
+                .deadLetterRoutingKey(dlqRoutingKey)
                 .build();
     }
 
@@ -58,7 +63,6 @@ public class RabbitMQConfig {
                 .with(routingKeyPedidoPattern);
     }
 
-    // 2. Conversor JSON con soporte cruzado de paquetes para PedidoEvent
     @Bean
     public MessageConverter jsonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
@@ -80,6 +84,8 @@ public class RabbitMQConfig {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(jsonMessageConverter);
+        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+        factory.setDefaultRequeueRejected(false);
         return factory;
     }
 

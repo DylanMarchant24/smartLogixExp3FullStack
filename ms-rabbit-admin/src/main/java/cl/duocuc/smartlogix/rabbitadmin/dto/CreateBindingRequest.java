@@ -26,6 +26,10 @@ public class CreateBindingRequest {
 
     @NotBlank(message = "La routing key es obligatoria")
     @Size(max = 255, message = "La routing key no puede superar 255 caracteres")
+    @Pattern(
+        regexp = "^[a-zA-Z0-9._:#*-]+$",
+        message = "La routing key solo puede contener letras, números, '.', '_', ':', '#', '*' y '-'"
+    )
     private String routingKey;
 
     private Map<String, Object> arguments;

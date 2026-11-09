@@ -9,27 +9,46 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuración de RabbitMQ para ms-pedidos.
+ * Centraliza los nombres de exchanges, colas y routing keys desde application.yml
+ * e incorpora argumentos avanzados de Dead Letter Exchange (DLX) en las colas.
+ */
 @Configuration
 public class RabbitMQConfig {
 
-    // 1. INYECTAMOS LAS VARIABLES CENTRALIZADAS Y ELIMINAMOS LOS TEXTOS QUEMADOS
     @Value("${mensajeria.exchange.pedidos:smartlogix.exchange}")
-    private String exchangeName;
+    private String exchangeName = "smartlogix.exchange";
+
+    @Value("${mensajeria.exchange.dlx:smartlogix.dlx}")
+    private String dlxName = "smartlogix.dlx";
 
     @Value("${mensajeria.colas.notificaciones:smartlogix.notificaciones.queue}")
-    private String queueNotificaciones;
+    private String queueNotificaciones = "smartlogix.notificaciones.queue";
+
+    @Value("${mensajeria.colas.dlq-notificaciones:smartlogix.notificaciones.dlq}")
+    private String dlqNotificaciones = "smartlogix.notificaciones.dlq";
 
     @Value("${mensajeria.colas.envios:smartlogix.envios.queue}")
-    private String queueEnvios;
+    private String queueEnvios = "smartlogix.envios.queue";
+
+    @Value("${mensajeria.colas.dlq-envios:smartlogix.envios.dlq}")
+    private String dlqEnvios = "smartlogix.envios.dlq";
 
     @Value("${mensajeria.routing-keys.pedido-creado:pedido.creado}")
-    private String routingKeyPedidoCreado;
+    private String routingKeyPedidoCreado = "pedido.creado";
 
     @Value("${mensajeria.routing-keys.pedido-actualizado:pedido.actualizado}")
-    private String routingKeyPedidoActualizado;
+    private String routingKeyPedidoActualizado = "pedido.actualizado";
 
     @Value("${mensajeria.routing-keys.pedido-pattern:pedido.*}")
-    private String routingKeyPedidoPattern;
+    private String routingKeyPedidoPattern = "pedido.*";
+
+    @Value("${mensajeria.routing-keys.dlq-notificaciones:notificaciones.dead}")
+    private String dlqRoutingKeyNotificaciones = "notificaciones.dead";
+
+    @Value("${mensajeria.routing-keys.dlq-envios:envios.dead}")
+    private String dlqRoutingKeyEnvios = "envios.dead";
 
     @Bean
     public TopicExchange smartlogixExchange() {
@@ -37,13 +56,34 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public DirectExchange smartlogixDeadLetterExchange() {
+        return new DirectExchange(dlxName, true, false);
+    }
+
+    @Bean
     public Queue notificacionesQueue() {
-        return QueueBuilder.durable(queueNotificaciones).build();
+        return QueueBuilder.durable(queueNotificaciones)
+                .deadLetterExchange(dlxName)
+                .deadLetterRoutingKey(dlqRoutingKeyNotificaciones)
+                .build();
     }
 
     @Bean
     public Queue enviosQueue() {
-        return QueueBuilder.durable(queueEnvios).build();
+        return QueueBuilder.durable(queueEnvios)
+                .deadLetterExchange(dlxName)
+                .deadLetterRoutingKey(dlqRoutingKeyEnvios)
+                .build();
+    }
+
+    @Bean
+    public Queue notificacionesDeadLetterQueue() {
+        return QueueBuilder.durable(dlqNotificaciones).build();
+    }
+
+    @Bean
+    public Queue enviosDeadLetterQueue() {
+        return QueueBuilder.durable(dlqEnvios).build();
     }
 
     @Bean
@@ -60,7 +100,20 @@ public class RabbitMQConfig {
                 .with(routingKeyPedidoCreado);
     }
 
-    // 2. MANTENEMOS LA CONFIGURACIÓN DEL RABBIT TEMPLATE INTACTA
+    @Bean
+    public Binding bindingNotificacionesDlq(Queue notificacionesDeadLetterQueue, DirectExchange smartlogixDeadLetterExchange) {
+        return BindingBuilder.bind(notificacionesDeadLetterQueue)
+                .to(smartlogixDeadLetterExchange)
+                .with(dlqRoutingKeyNotificaciones);
+    }
+
+    @Bean
+    public Binding bindingEnviosDlq(Queue enviosDeadLetterQueue, DirectExchange smartlogixDeadLetterExchange) {
+        return BindingBuilder.bind(enviosDeadLetterQueue)
+                .to(smartlogixDeadLetterExchange)
+                .with(dlqRoutingKeyEnvios);
+    }
+
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
