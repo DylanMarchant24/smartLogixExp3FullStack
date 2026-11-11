@@ -2,16 +2,18 @@
 # SmartLogix Monorepo Git Ignore Rules
 # ==============================================================================
 
-# Node / React
+# Node / React / Angular
 node_modules/
 build/
 dist/
+.angular/
 .cache/
 .parcel-cache/
 coverage/
 frontend/node_modules/
 frontend/build/
 frontend/dist/
+frontend/.angular/
 frontend/.cache/
 frontend/coverage/
 
@@ -19,6 +21,8 @@ frontend/coverage/
 .env
 .env.*
 *.env
+!.env.example
+!frontend/.env.example
 application-local.properties
 application-dev-local.properties
 
@@ -54,3 +58,7 @@ desktop.ini
 # Database & Local Data
 data/
 mysql-data/
+
+# Contexto local (no subir a GitHub)
+Contexto/
+contexto/

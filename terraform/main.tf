@@ -76,13 +76,13 @@ resource "aws_security_group" "smartlogix_sg" {
     from_port   = 8085
     to_port     = 8085
     protocol    = "tcp"
-    cidr_blocks = [var.ssh_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    description = "Microservicios internos (debug opcional y ms-rabbit-admin)"
+    description = "Microservicios internos, ms-rabbit-admin (8093), ms-auditoria (8094) y Kafka-UI (8095)"
     from_port   = 8081
-    to_port     = 8093
+    to_port     = 8095
     protocol    = "tcp"
     cidr_blocks = [var.ssh_cidr]
   }
@@ -96,9 +96,17 @@ resource "aws_security_group" "smartlogix_sg" {
   }
 
   ingress {
-    description = "RabbitMQ Management UI"
+    description = "RabbitMQ Cluster Management UI (nodo 1: 15672, nodo 2: 15673)"
     from_port   = 15672
-    to_port     = 15672
+    to_port     = 15673
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_cidr]
+  }
+
+  ingress {
+    description = "Apache Kafka Cluster External Listeners (broker 1: 9092, broker 2: 9093)"
+    from_port   = 9092
+    to_port     = 9093
     protocol    = "tcp"
     cidr_blocks = [var.ssh_cidr]
   }
