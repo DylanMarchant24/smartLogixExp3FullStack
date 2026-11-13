@@ -5,21 +5,23 @@ import cl.duocuc.smartlogix.pedidos.event.PedidoEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 /**
- * Publicador de eventos AMQP para pedidos.
- * Envía mensajes al TopicExchange usando nombres centralizados desde properties.
+ * Publicador de eventos para pedidos.
+ * Envía mensajes asíncronos tanto a RabbitMQ como a Kafka usando configuración centralizada.
  */
 @Slf4j
 @Service
 public class PedidoEventPublisher {
 
     private final RabbitTemplate rabbitTemplate;
+    // 1. Inyectamos el template de Kafka tipado con tu DTO de evento
+    private final KafkaTemplate<String, PedidoEvent> kafkaTemplate;
 
-    // 1. Inyectamos las variables dinámicas del application.properties
     @Value("${mensajeria.exchange.pedidos:smartlogix.exchange}")
     private String exchangeName;
 
@@ -29,8 +31,13 @@ public class PedidoEventPublisher {
     @Value("${mensajeria.routing-keys.pedido-actualizado:pedido.actualizado}")
     private String routingKeyPedidoActualizado;
 
-    public PedidoEventPublisher(RabbitTemplate rabbitTemplate) {
+    // 2. Definimos el tópico de Kafka por defecto
+    @Value("${kafka.topic.pedidos:pedidos_topic}")
+    private String kafkaTopic;
+
+    public PedidoEventPublisher(RabbitTemplate rabbitTemplate, KafkaTemplate<String, PedidoEvent> kafkaTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public void publicarPedidoCreado(PedidoDTO pedido) {
@@ -49,14 +56,14 @@ public class PedidoEventPublisher {
         try {
             log.info("[RabbitMQ] Publicando evento '{}' a exchange '{}' con routing key '{}'",
                     event.getTipoEvento(), exchangeName, routingKeyPedidoCreado);
-            // 2. Usamos las variables inyectadas en lugar de textos quemados
-            rabbitTemplate.convertAndSend(
-                    exchangeName,
-                    routingKeyPedidoCreado,
-                    event
-            );
+            rabbitTemplate.convertAndSend(exchangeName, routingKeyPedidoCreado, event);
+
+            // 3. Publicación en Kafka usando el ID del pedido como llave (Key)
+            log.info("[Kafka] Publicando evento '{}' al tópico '{}'", event.getTipoEvento(), kafkaTopic);
+            kafkaTemplate.send(kafkaTopic, String.valueOf(pedido.getId()), event);
+
         } catch (Exception e) {
-            log.error("[RabbitMQ] Error al publicar evento de pedido creado: {}", e.getMessage(), e);
+            log.error("[Mensajería] Error al publicar evento de pedido creado: {}", e.getMessage(), e);
         }
     }
 
@@ -76,14 +83,14 @@ public class PedidoEventPublisher {
         try {
             log.info("[RabbitMQ] Publicando evento '{}' a exchange '{}' con routing key '{}'",
                     event.getTipoEvento(), exchangeName, routingKeyPedidoActualizado);
-            // 3. Usamos las variables inyectadas
-            rabbitTemplate.convertAndSend(
-                    exchangeName,
-                    routingKeyPedidoActualizado,
-                    event
-            );
+            rabbitTemplate.convertAndSend(exchangeName, routingKeyPedidoActualizado, event);
+
+            // 4. Publicación en Kafka para actualizaciones
+            log.info("[Kafka] Publicando evento '{}' al tópico '{}'", event.getTipoEvento(), kafkaTopic);
+            kafkaTemplate.send(kafkaTopic, String.valueOf(pedido.getId()), event);
+
         } catch (Exception e) {
-            log.error("[RabbitMQ] Error al publicar evento de pedido actualizado: {}", e.getMessage(), e);
+            log.error("[Mensajería] Error al publicar evento de pedido actualizado: {}", e.getMessage(), e);
         }
     }
 }
