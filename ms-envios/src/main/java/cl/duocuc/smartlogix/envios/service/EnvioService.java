@@ -4,6 +4,7 @@ import cl.duocuc.smartlogix.envios.dto.EnvioDTO;
 import cl.duocuc.smartlogix.envios.model.Envio;
 import cl.duocuc.smartlogix.envios.model.EstadoEnvio;
 import cl.duocuc.smartlogix.envios.repository.EnvioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,15 +16,24 @@ import java.util.stream.Collectors;
 /**
  * Servicio de Envíos.
  * PATRÓN: Repository Pattern – usa EnvioRepository para persistir envíos.
- * Genera código de seguimiento único (UUID) al crear cada envío.
+ * Genera código de seguimiento único (UUID) al crear cada envío y publica eventos de tracking en Kafka.
  */
 @Service
 public class EnvioService {
 
     private final EnvioRepository envioRepository;
+    private final EnvioKafkaPublisher envioKafkaPublisher;
 
     public EnvioService(EnvioRepository envioRepository) {
+        this(envioRepository, null);
+    }
+
+    @Autowired
+    public EnvioService(
+            EnvioRepository envioRepository,
+            @Autowired(required = false) EnvioKafkaPublisher envioKafkaPublisher) {
         this.envioRepository = envioRepository;
+        this.envioKafkaPublisher = envioKafkaPublisher;
     }
 
     // ── Consultas ─────────────────────────────────────────────────────────────
@@ -59,7 +69,11 @@ public class EnvioService {
         envio.setEstado(EstadoEnvio.PENDIENTE);
         // Genera código de seguimiento único
         envio.setCodigoSeguimiento("SL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        return toDTO(envioRepository.save(envio));
+        EnvioDTO guardado = toDTO(envioRepository.save(envio));
+        if (envioKafkaPublisher != null) {
+            envioKafkaPublisher.publicarEnvioCreado(guardado);
+        }
+        return guardado;
     }
 
     @Transactional
@@ -71,7 +85,11 @@ public class EnvioService {
         if (nuevoEstado == EstadoEnvio.ENTREGADO) {
             envio.setFechaEntrega(LocalDateTime.now());
         }
-        return toDTO(envioRepository.save(envio));
+        EnvioDTO actualizado = toDTO(envioRepository.save(envio));
+        if (envioKafkaPublisher != null) {
+            envioKafkaPublisher.publicarEstadoActualizado(actualizado);
+        }
+        return actualizado;
     }
 
     // ── Mapper ────────────────────────────────────────────────────────────────

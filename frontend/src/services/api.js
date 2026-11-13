@@ -17,6 +17,8 @@ const AUTH_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/auth`;
 const PAGOS_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/pagos`;
 const SUCURSALES_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/sucursales`;
 const USUARIOS_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/usuarios`;
+const AUDITORIA_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/auditoria`;
+const RABBIT_ADMIN_BASE = `${API_BASE_URL.replace(/\/$/, '')}/api/rabbit-admin`;
 
 const defaultConfig = {
   headers: {
@@ -47,6 +49,16 @@ const sucursalesApi = axios.create({
 
 const usuariosApi = axios.create({
   baseURL: USUARIOS_BASE,
+  ...defaultConfig,
+});
+
+const auditoriaApi = axios.create({
+  baseURL: AUDITORIA_BASE,
+  ...defaultConfig,
+});
+
+const rabbitAdminApi = axios.create({
+  baseURL: RABBIT_ADMIN_BASE,
   ...defaultConfig,
 });
 
@@ -89,6 +101,8 @@ api.interceptors.request.use(addAuthHeader);
 pagosApi.interceptors.request.use(addAuthHeader);
 sucursalesApi.interceptors.request.use(addAuthHeader);
 usuariosApi.interceptors.request.use(addAuthHeader);
+auditoriaApi.interceptors.request.use(addAuthHeader);
+rabbitAdminApi.interceptors.request.use(addAuthHeader);
 
 // ── Interceptores de Respuesta ────────────────────────────────────────────────
 // NUNCA usar window.location.href en interceptores HTTP para evitar recargas en bucle (parpadeos).
@@ -107,6 +121,8 @@ api.interceptors.response.use((response) => response, (error) => handleResponseE
 pagosApi.interceptors.response.use((response) => response, (error) => handleResponseError(error, 'No se pudieron procesar los pagos.'));
 sucursalesApi.interceptors.response.use((response) => response, (error) => handleResponseError(error, 'No se pudieron cargar las sucursales.'));
 usuariosApi.interceptors.response.use((response) => response, (error) => handleResponseError(error, 'No se pudieron cargar los usuarios.'));
+auditoriaApi.interceptors.response.use((response) => response, (error) => handleResponseError(error, 'No se pudieron cargar los registros de auditoría y Kafka.'));
+rabbitAdminApi.interceptors.response.use((response) => response, (error) => handleResponseError(error, 'No se pudo administrar RabbitMQ.'));
 
 // ── Autenticación ────────────────────────────────────────────────────────────
 export const login = async (username, password) => {
@@ -231,5 +247,18 @@ export const toggleEstadoProveedor = async (id, estado) => {
   const response = await api.put(`/proveedores/${id}/estado`, { activo: estado });
   return response.data;
 };
+
+// ── Auditoría & Administración de Tópicos Kafka ──────────────────────
+export const getAuditoriaLogs = () =>
+  auditoriaApi.get('').then((r) => r.data);
+
+export const getKafkaTopics = () =>
+  auditoriaApi.get('/kafka/topics').then((r) => r.data);
+
+export const crearKafkaTopic = (data) =>
+  auditoriaApi.post('/kafka/topics', data).then((r) => r.data);
+
+export const eliminarKafkaTopic = (topicName) =>
+  auditoriaApi.delete(`/kafka/topics/${topicName}`).then((r) => r.data);
 
 export default api;

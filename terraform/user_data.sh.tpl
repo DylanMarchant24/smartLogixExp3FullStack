@@ -42,6 +42,7 @@ fi
 echo "IP publica detectada: $PUBLIC_IP"
 
 cat > .env <<EOF
+HOST_IP=$PUBLIC_IP
 MYSQL_ROOT_PASSWORD=${mysql_root_password}
 AZURE_CLIENT_ID=${azure_client_id}
 AZURE_TENANT_ID=${azure_tenant_id}
@@ -49,6 +50,8 @@ FRONTEND_URL=http://$PUBLIC_IP:3000
 API_BASE_URL=http://$PUBLIC_IP:8080
 RABBITMQ_DEFAULT_USER=smartlogix
 RABBITMQ_DEFAULT_PASS=smartlogix123
+RABBITMQ_ERLANG_COOKIE=SMARTLOGIX_SECRET_CLUSTER_COOKIE_2026
+KAFKA_UI_PORT=8095
 EOF
 chown ubuntu:ubuntu .env
 chmod 600 .env
