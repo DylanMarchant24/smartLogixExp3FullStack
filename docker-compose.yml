@@ -403,14 +403,9 @@ services:
     container_name: smartlogix-ms-pagos
     restart: unless-stopped
     depends_on:
-      mysql:
-        condition: service_healthy
       discovery-server:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_pagos?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
     ports:
       - "8086:8086"
@@ -426,14 +421,9 @@ services:
     container_name: smartlogix-ms-sucursales
     restart: unless-stopped
     depends_on:
-      mysql:
-        condition: service_healthy
       discovery-server:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_sucursales?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
     ports:
       - "8087:8087"
@@ -449,14 +439,9 @@ services:
     container_name: smartlogix-ms-calificaciones
     restart: unless-stopped
     depends_on:
-      mysql:
-        condition: service_healthy
       discovery-server:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/db_calificaciones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
     ports:
       - "8088:8088"
@@ -502,7 +487,7 @@ services:
       rabbitmq-1:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smartlogix_notificaciones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smartlogix_notificaciones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
@@ -529,7 +514,7 @@ services:
       discovery-server:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smartlogix_cupones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smartlogix_cupones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"

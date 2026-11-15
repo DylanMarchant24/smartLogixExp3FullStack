@@ -1,6 +1,7 @@
 package cl.duocuc.smartlogix.auditoria.service;
 
 import cl.duocuc.smartlogix.auditoria.dto.CreateKafkaTopicRequest;
+import cl.duocuc.smartlogix.auditoria.dto.KafkaConsumerGroupDTO;
 import cl.duocuc.smartlogix.auditoria.dto.KafkaTopicInfoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +9,12 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AlterConfigOp;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.ConsumerGroupDescription;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.MemberDescription;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.TopicConfig;
 import org.springframework.stereotype.Service;
@@ -143,6 +148,78 @@ public class KafkaTopicAdminService {
             log.error("[Kafka Admin] Error al eliminar tópico '{}': {}", topicName, e.getMessage(), e);
             throw new IllegalStateException("No fue posible eliminar el tópico '" + topicName + "': " + e.getMessage(), e);
         }
+    }
+
+    public List<KafkaConsumerGroupDTO> listarConsumerGroups() {
+        try {
+            Collection<ConsumerGroupListing> listings = adminClient.listConsumerGroups()
+                    .valid()
+                    .get(5, TimeUnit.SECONDS);
+            List<String> groupIds = listings.stream()
+                    .map(ConsumerGroupListing::groupId)
+                    .toList();
+
+            if (groupIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            Map<String, ConsumerGroupDescription> descriptions = adminClient.describeConsumerGroups(groupIds)
+                    .all()
+                    .get(5, TimeUnit.SECONDS);
+
+            return descriptions.values().stream()
+                    .map(this::mapConsumerGroup)
+                    .toList();
+        } catch (Exception e) {
+            log.error("[Kafka Admin] Error al listar consumer groups: {}", e.getMessage(), e);
+            throw new IllegalStateException("No fue posible listar los consumer groups de Kafka: " + e.getMessage(), e);
+        }
+    }
+
+    public KafkaConsumerGroupDTO describirConsumerGroup(String groupId) {
+        try {
+            Map<String, ConsumerGroupDescription> descriptions = adminClient.describeConsumerGroups(List.of(groupId))
+                    .all()
+                    .get(5, TimeUnit.SECONDS);
+            ConsumerGroupDescription desc = descriptions.get(groupId);
+            if (desc == null) {
+                throw new IllegalStateException("Consumer group no encontrado: " + groupId);
+            }
+            return mapConsumerGroup(desc);
+        } catch (Exception e) {
+            log.error("[Kafka Admin] Error al describir consumer group '{}': {}", groupId, e.getMessage(), e);
+            throw new IllegalStateException("No fue posible describir el consumer group '" + groupId + "': " + e.getMessage(), e);
+        }
+    }
+
+    public void eliminarConsumerGroup(String groupId) {
+        try {
+            adminClient.deleteConsumerGroups(List.of(groupId)).all().get(5, TimeUnit.SECONDS);
+            log.info("[Kafka Admin] Consumer group '{}' eliminado exitosamente", groupId);
+        } catch (Exception e) {
+            log.error("[Kafka Admin] Error al eliminar consumer group '{}': {}", groupId, e.getMessage(), e);
+            throw new IllegalStateException("No fue posible eliminar el consumer group '" + groupId + "': " + e.getMessage(), e);
+        }
+    }
+
+    private KafkaConsumerGroupDTO mapConsumerGroup(ConsumerGroupDescription desc) {
+        Set<String> topics = desc.members().stream()
+                .map(MemberDescription::assignment)
+                .flatMap(assignment -> assignment.topicPartitions().stream())
+                .map(TopicPartition::topic)
+                .collect(Collectors.toSet());
+
+        String coordinator = desc.coordinator() != null
+                ? desc.coordinator().host() + ":" + desc.coordinator().port()
+                : "desconocido";
+
+        return KafkaConsumerGroupDTO.builder()
+                .groupId(desc.groupId())
+                .state(desc.state() != null ? desc.state().toString() : "UNKNOWN")
+                .memberCount(desc.members().size())
+                .coordinator(coordinator)
+                .assignedTopics(topics)
+                .build();
     }
 }
 

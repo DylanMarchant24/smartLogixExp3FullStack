@@ -261,4 +261,10 @@ export const crearKafkaTopic = (data) =>
 export const eliminarKafkaTopic = (topicName) =>
   auditoriaApi.delete(`/kafka/topics/${topicName}`).then((r) => r.data);
 
+export const getKafkaConsumerGroups = () =>
+  auditoriaApi.get('/kafka/consumer-groups').then((r) => r.data);
+
+export const eliminarKafkaConsumerGroup = (groupId) =>
+  auditoriaApi.delete(`/kafka/consumer-groups/${groupId}`).then((r) => r.data);
+
 export default api;

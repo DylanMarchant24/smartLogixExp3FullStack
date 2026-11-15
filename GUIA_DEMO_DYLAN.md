@@ -216,6 +216,10 @@ curl -i -X POST http://localhost:8094/api/auditoria/kafka/topics \
 
 # 3. Eliminar un tópico de prueba
 curl -i -X DELETE http://localhost:8094/api/auditoria/kafka/topics/smartlogix.flota.telemetria
+
+# 4. Listar y describir Consumer Groups vía API REST
+curl -s http://localhost:8094/api/auditoria/kafka/consumer-groups | jq .
+curl -s http://localhost:8094/api/auditoria/kafka/consumer-groups/smartlogix-auditoria-group | jq .
 ```
 
 #### C) Producir y Consumir Eventos en Tiempo Real (Flujo End-to-End Pedidos -> Envíos -> Auditoría)
