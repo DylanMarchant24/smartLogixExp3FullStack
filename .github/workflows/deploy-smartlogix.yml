@@ -100,7 +100,7 @@ jobs:
       - name: Mostrar outputs (IP, URLs del BFF, Eureka, RabbitMQ y Swagger)
         if: env.TF_ACTION == 'apply'
         run: |
-          terraform refresh -input=false
+          terraform refresh -input=false >/dev/null
           terraform output
 
       - name: Terraform Destroy
