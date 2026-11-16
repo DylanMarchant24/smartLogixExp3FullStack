@@ -56,12 +56,25 @@ EOF
 chown ubuntu:ubuntu .env
 chmod 600 .env
 
-# ── 4. Construir y levantar todo con Docker Compose ───────────────
+# ── 4. Construir y levantar todo con Docker Compose (en 2 fases + reintentos) ──
 echo "=== Construyendo imágenes (puede tardar varios minutos) ==="
 docker compose build
 
-echo "=== Levantando servicios ==="
-docker compose up -d
+echo "=== Fase 1: Levantando infraestructura base (MySQL, RabbitMQ Cluster, Kafka Cluster) ==="
+for intento in 1 2 3; do
+  docker compose up -d mysql rabbitmq-1 rabbitmq-2 zookeeper kafka-1 kafka-2 && break || {
+    echo "Reintentando infraestructura base (intento $intento)..."
+    sleep 20
+  }
+done
+
+echo "=== Fase 2: Levantando microservicios, API Gateway, BFF y Frontend ==="
+for intento in 1 2 3; do
+  docker compose up -d && break || {
+    echo "Reintentando arranque completo (intento $intento)..."
+    sleep 20
+  }
+done
 
 echo "=== SmartLogix - Aprovisionamiento completado $(date) ==="
 echo "Ver estado con: docker compose ps"
