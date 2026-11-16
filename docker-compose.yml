@@ -24,8 +24,9 @@ services:
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 10s
-      timeout: 5s
-      retries: 10
+      timeout: 10s
+      retries: 15
+      start_period: 30s
     networks:
       - smartlogix-net
 
@@ -48,8 +49,9 @@ services:
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
-      timeout: 5s
-      retries: 10
+      timeout: 15s
+      retries: 15
+      start_period: 45s
     networks:
       smartlogix-net:
         aliases:
@@ -77,8 +79,9 @@ services:
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
-      timeout: 5s
-      retries: 10
+      timeout: 15s
+      retries: 15
+      start_period: 45s
     networks:
       smartlogix-net:
         aliases:
@@ -102,8 +105,9 @@ services:
     healthcheck:
       test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
       interval: 10s
-      timeout: 5s
-      retries: 10
+      timeout: 10s
+      retries: 15
+      start_period: 30s
     networks:
       - smartlogix-net
 
