@@ -48,3 +48,8 @@ output "auditoria_kafka_topics_url" {
   description = "Endpoint REST de administracion de topicos Kafka en ms-auditoria"
   value       = "http://${aws_eip.backend_eip.public_ip}:8094/api/auditoria/kafka/topics"
 }
+
+output "swagger_kafka_admin_url" {
+  description = "URL interactiva de Swagger UI para probar y administrar Kafka y Auditoria (ms-auditoria)"
+  value       = "http://${aws_eip.backend_eip.public_ip}:8094/swagger-ui/index.html"
+}
